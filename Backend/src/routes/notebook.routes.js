@@ -14,4 +14,6 @@ router.patch("/:id",notebookController.updateNotebook);
 
 router.delete("/:id",notebookController.deleteNotebook);
 
+router.patch("/:id/pin",notebookController.togglePinNotebook);
+
 export default router;

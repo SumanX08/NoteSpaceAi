@@ -4,7 +4,8 @@ import errorMiddleware from "./middleware/error.middleware.js";
 import notebookRoutes from "./routes/notebook.routes.js";
 import sourceRoutes from "./routes/source.routes.js";
 import chatRoutes from "./routes/chat.routes.js"
-
+import {serve} from 'inngest/express'
+import { inngest,functions } from './inngest/index.js';
 
 
 const app=express()
@@ -19,6 +20,8 @@ app.get("/",(req,res)=>{
     message: "NotebookLM API Running",
   });
 })
+
+app.use("/api/inngest",serve({client: inngest,functions,}));
 
 app.use("/api/notebooks", notebookRoutes);
 app.use("/api/sources", sourceRoutes);

@@ -1,6 +1,9 @@
-import extractContent from "../extractors/index.js";
+import extractSource from "../extractors/index.js";
 
 export default async function extractStage(context) {
-  context.extracted = await extractContent(context.source);
+  const extracted = await extractSource(context.source);
+
+  context.extracted = extracted;
+
   return context;
 }

@@ -13,6 +13,7 @@ import {
   Type,
   Upload,
   Database,
+  File,
 } from "lucide-react";
 
 import { uploadSource, getSources } from "@/services/source.service";
@@ -223,7 +224,7 @@ function SourceCard({
   } = useAppStore();
 
   const Icon =
-    sourceIcon[source.type];
+    sourceIcon[source.type]||File;
 
   const meta =
     statusMeta[source.status];
@@ -384,7 +385,8 @@ const handleFile = async (e) => {
     const formData = new FormData();
 
     formData.append("file", file);
-    formData.append("notebookId", notebookId);
+formData.append("notebookId", notebookId);
+formData.append("type", selectedType);
 
     try {
         setUploading(true);
@@ -403,16 +405,52 @@ const handleFile = async (e) => {
     }
 };
 const handleWebsite = async () => {
-  await uploadSource({
-    notebookId,
-    type: "website",
-    url,
-  });
+  try {
+    setUploading(true);
 
-  const res = await getSources(notebookId);
-  setSourceList(res.data);
+    const formData = new FormData();
 
-  onClose();
+    formData.append("notebookId", notebookId);
+    formData.append("type", "website");
+    formData.append("url", url);
+    console.log(url)
+
+    await uploadSource(formData);
+
+    const res = await getSources(notebookId);
+    setSourceList(res.data);
+
+    onClose();
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setUploading(false);
+  }
+};
+const handleYoutube = async () => {
+  if (!url.trim()) return;
+
+  try {
+    setUploading(true);
+
+    const formData = new FormData();
+
+    formData.append("notebookId", notebookId);
+    formData.append("type", "youtube");
+    formData.append("url", url.trim());
+
+    await uploadSource(formData);
+
+    const res = await getSources(notebookId);
+
+    setSourceList(res.data);
+
+    onClose();
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setUploading(false);
+  }
 };
 
 {
@@ -458,7 +496,7 @@ const handleWebsite = async () => {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf"
+          accept=".pdf,.docx"
           className="hidden"
           onChange={handleFile}
         />
@@ -530,6 +568,23 @@ const handleWebsite = async () => {
       className="w-full rounded-lg bg-primary p-2 text-primary-foreground"
     >
       Add Website
+    </button>
+  </div>
+)}
+{selectedType === "youtube" && (
+  <div className="mt-4 space-y-2">
+    <input
+      value={url}
+      onChange={(e) => setUrl(e.target.value)}
+      placeholder="https://www.youtube.com/watch?v=..."
+      className="w-full rounded-lg border p-2"
+    />
+
+    <button
+      onClick={handleYoutube}
+      disabled={!url.trim() }
+      className="w-full rounded-lg bg-primary p-2 text-primary-foreground disabled:opacity-50"
+    >
     </button>
   </div>
 )}

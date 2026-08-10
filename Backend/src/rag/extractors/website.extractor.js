@@ -1,31 +1,32 @@
-import axios from "axios";
-import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
-
+import firecrawl
+ from "../../config/firecrawl.js";
 export default async function extractWebsite(source) {
-  const response = await axios.get(source.content.url, {
-    timeout: 15000,
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-    },
+  console.log(source)
+  if (!source.title) {
+    throw new Error("Website URL is required.");
+  }
+
+  const result = await firecrawl.scrape(source.title, {
+    formats: ["markdown"],
   });
 
-  const dom = new JSDOM(response.data);
-
-  const article = new Readability(dom.window.document).parse();
-
-  if (!article) {
-    throw new Error("Failed to extract website content.");
+  if (!result?.markdown) {
+    throw new Error("Firecrawl returned no content.");
   }
 
   return {
-    text: article.textContent,
-    title: article.title,
+    text: result.markdown,
+
+    title:
+      result.metadata?.title ||
+      source.title ||
+      source.url,
+
     metadata: {
-      url: source.url,
-      length: article.length,
-      excerpt: article.excerpt,
+      url: source.title,
+      description: result.metadata?.description,
+      language: result.metadata?.language,
+      source: "firecrawl",
     },
   };
 }

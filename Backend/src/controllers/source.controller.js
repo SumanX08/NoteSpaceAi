@@ -1,114 +1,210 @@
-import fs from "fs/promises";
-
 import asyncHandler from "../middleware/asyncHandler.js";
 
 import Source from "../models/source.model.js";
 import vectorRepository from "../vectorstore/vector.repository.js";
-import { processSource } from "../rag/pipeline/processSource.js";
+import { inngest } from "../inngest/index.js";
+import { uploadDocumentToCloudinary } from "../services/cloudinary.service.js";
+
 export const uploadSource = asyncHandler(async (req, res) => {
   const file = req.file;
+
+  if (file) {
+  console.log("Uploaded file:", {
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size,
+    bufferLength: file.buffer?.length,
+  });
+}
 
   const {
     notebookId,
     title,
     type,
     url,
-    content,
   } = req.body;
 
-  if (!notebookId) {
-    if (file) {
-      await fs.unlink(file.path);
-    }
+  // =====================================================
+  // Validate notebook
+  // =====================================================
 
+  if (!notebookId) {
     return res.status(400).json({
       success: false,
       message: "Notebook ID is required.",
     });
   }
 
-  if (["pdf", "docx", "transcript"].includes(type) && !file) {
-    return res.status(400).json({
-      success: false,
-      message: "File is required.",
-    });
-  }
+  // =====================================================
+  // PDF / DOCX
+  // =====================================================
 
-  if (type === "website" && !url) {
-    return res.status(400).json({
-      success: false,
-      message: "Website URL is required.",
-    });
-  }
+ // =====================================================
+// DOCUMENTS — PDF / DOCX
+// =====================================================
 
-  if (type === "youtube" && !url) {
-    return res.status(400).json({
-      success: false,
-      message: "YouTube URL is required.",
-    });
-  }
+if (file) {
+  const mimeToType = {
+    "application/pdf": "pdf",
 
-  if (type === "text" && !content) {
-    return res.status(400).json({
-      success: false,
-      message: "Content is required.",
-    });
-  }
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      "docx",
 
-  const sourceData = {
-    notebook: notebookId,
-    title: title || "Untitled",
-    type,
-    status: "uploading",
-    content: {},
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+      "pptx",
+
+    "text/plain": "text",
+
+    "text/vtt": "transcript",
   };
 
-  if (file) {
-    sourceData.title = title || file.originalname;
+  const detectedType = mimeToType[file.mimetype];
 
-    sourceData.content = {
-      location: file.path,
-      mimeType: file.mimetype,
-      size: file.size,
-      originalName: file.originalname,
-    };
+  if (!detectedType) {
+    return res.status(400).json({
+      success: false,
+      message: `Unsupported document type: ${file.mimetype}`,
+    });
   }
 
-  if (type === "website") {
-    sourceData.content = {
-      url,
-    };
+  const uploaded =
+    await uploadDocumentToCloudinary(
+      file.buffer,
+      file.originalname,
+      file.mimetype
+    );
 
-    sourceData.title = title || url;
-  }
+  const source = await Source.create({
+    notebookId,
 
-  if (type === "youtube") {
-    sourceData.content = {
-      url,
-    };
+    // IMPORTANT:
+    // Use the type detected from the actual file
+    type: detectedType,
 
-    sourceData.title = title || url;
-  }
+    title:
+      title?.trim() ||
+      file.originalname.replace(
+        /\.(pdf|docx|pptx|txt|vtt)$/i,
+        ""
+      ),
 
-  if (type === "text") {
-    sourceData.content = {
-      text: content,
-    };
+    originalName: file.originalname,
 
-    sourceData.title = title || "Untitled Note";
-  }
+    mimeType: file.mimetype,
 
-  const source = await Source.create(sourceData);
+    size: file.size,
 
-  processSource(source._id).catch((error) => {
-    console.error("Background indexing failed:", error);
+    cloudinary: {
+      publicId: uploaded.publicId,
+      resourceType: uploaded.resourceType,
+      url: uploaded.secureUrl,
+    },
+
+    status: "uploading",
   });
 
-  res.status(201).json({
+  await inngest.send({
+    name: "source/created",
+
+    data: {
+      sourceId: source._id.toString(),
+    },
+  });
+
+  return res.status(201).json({
     success: true,
     data: source,
   });
+}
+
+  // =====================================================
+  // WEBSITE
+  // =====================================================
+
+  if (type === "website") {
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        message: "Website URL is required.",
+      });
+    }
+
+    const source = await Source.create({
+      notebookId,
+
+      type: "website",
+
+      title: title?.trim() || url,
+
+      url,
+
+      status: "uploading",
+    });
+
+    await inngest.send({
+      name: "source/created",
+      data: {
+        sourceId: source._id.toString(),
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: source,
+    });
+  }
+
+  // =====================================================
+  // YOUTUBE
+  // =====================================================
+
+  if (type === "youtube") {
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        message: "YouTube URL is required.",
+      });
+    }
+
+    const source = await Source.create({
+      notebookId,
+
+      type: "youtube",
+
+      title: title?.trim() || url,
+
+      url,
+
+      status: "uploading",
+    });
+
+    await inngest.send({
+      name: "source/created",
+      data: {
+        sourceId: source._id.toString(),
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: source,
+    });
+  }
+
+  // =====================================================
+  // Unsupported source
+  // =====================================================
+
+  return res.status(400).json({
+    success: false,
+    message: `Unsupported source type: ${type}`,
+  });
 });
+
+
+// =====================================================
+// DELETE SOURCE
+// =====================================================
 
 export const deleteSource = asyncHandler(async (req, res) => {
   const { sourceId } = req.params;
@@ -126,23 +222,28 @@ export const deleteSource = asyncHandler(async (req, res) => {
 
   await Source.findByIdAndDelete(sourceId);
 
-  res.json({
+  return res.json({
     success: true,
     message: "Source deleted successfully.",
   });
 });
 
+
+// =====================================================
+// GET NOTEBOOK SOURCES
+// =====================================================
+
 export const getNotebookSources = asyncHandler(async (req, res) => {
   const { notebookId } = req.params;
 
   const sources = await Source.find({
-    notebook: notebookId,
+    notebookId,
   }).sort({
     createdAt: -1,
   });
 
-  res.json({
+  return res.json({
     success: true,
-    data:sources,
+    data: sources,
   });
 });

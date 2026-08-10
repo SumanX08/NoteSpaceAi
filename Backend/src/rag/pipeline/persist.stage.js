@@ -3,25 +3,33 @@ import Chunk from "../../models/chunk.model.js";
 import vectorRepository from "../../vectorstore/vector.repository.js";
 
 export default async function persistStage(context) {
-  const chunksToSave = context.embeddedChunks.map((chunk, index) => {
-    const vectorId = uuid();
+  const chunksToSave = context.embeddedChunks.map(
+    (chunk, index) => {
+      const vectorId = uuid();
 
-    return {
-      notebook: context.source.notebook,
-      source: context.source._id,
-      chunkIndex: index,
-      text: chunk.text,
-      vectorId,
-      metadata: chunk.metadata || {},
-      embedding: chunk.embedding,
-    };
-  });
+      return {
+        notebook: context.source.notebookId,
+        source: context.source._id,
+        chunkIndex: index,
+        text: chunk.text,
+        vectorId,
+        metadata: chunk.metadata || {},
+        embedding: chunk.embedding,
+      };
+    }
+  );
 
-  const mongoChunks = chunksToSave.map(({ embedding, ...chunk }) => chunk);
+  const mongoChunks = chunksToSave.map(
+    ({ embedding, ...chunk }) => chunk
+  );
 
   await Chunk.insertMany(mongoChunks);
 
-  await vectorRepository.upsertChunks(chunksToSave);
+  await vectorRepository.upsertChunks(
+    chunksToSave
+  );
 
   context.savedChunks = mongoChunks;
+
+  return context;
 }

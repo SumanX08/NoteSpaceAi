@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-import Sidebar from "./components/sidebar";
+import Sidebar from "./components/sidebar/Sidebar";
 import { TopBar } from "./components/top-bar";
 import { NavTabs } from "./components/nav-tabs";
 import { RightPanel } from "./components/right-panel";
 
-import { ChatView } from "./components/chat-view";
+import { ChatView } from "./components/chat/ChatView";
 import { SourcesView } from "./components/sources-view";
 import { LearnView } from "./components/learn-view";
 import { PodcastView } from "./components/podcast-view";
@@ -16,6 +16,9 @@ import axios from "axios";
 import {
   getNotebooks,
   createNotebook,
+  updateNotebook,
+  deleteNotebook,
+  togglePinNotebook,
 } from "@/services/notebook.service";import { useAppStore } from "@/store/appStore";
 
 function App() {
@@ -100,18 +103,24 @@ const loadNotebooks = async () => {
 
   console.log(notebooks)
 
-  notebooks = notebooks.map((n) => ({
+ notebooks = notebooks
+  .map((n) => ({
     ...n,
     id: n._id,
-   
-    sources: n.source ?? [],
+    isPinned: n.isPinned ?? false,
+    sources: n.sources ?? [],
     messages: n.messages ?? [],
-  }));
+  }))
+  .sort((a, b) => {
+    if (a.isPinned === b.isPinned) return 0;
+    return a.isPinned ? -1 : 1;
+  });
 
   setNotebooks(notebooks);
   setActiveNotebookId(notebooks[0].id);
 };
-const handleCreateNotebook = async () => {
+const handleCreateNotebook = async () => { 
+  
   try {
     const res = await createNotebook({
       title: "Untitled Notebook",
@@ -123,6 +132,7 @@ const handleCreateNotebook = async () => {
       id: res.data._id,
       sources: [],
       messages: [],
+      isPinned: false,
     };
 
     setNotebooks((prev) => [notebook, ...prev]);
@@ -131,6 +141,87 @@ const handleCreateNotebook = async () => {
     console.error(error);
   }
 };
+
+const handleRenameNotebook = async (id, title) => {
+  // optimistic update
+  setNotebooks((prev) =>
+    prev.map((nb) =>
+      nb.id === id
+        ? {
+            ...nb,
+            title,
+          }
+        : nb
+    )
+  );
+
+  try {
+    await updateNotebook(id, {
+      title,
+    });
+  } catch (err) {
+    console.error(err);
+
+    loadNotebooks();
+  }
+};
+
+const handleDeleteNotebook = async (id) => {
+  const previous = notebooks;
+
+  setNotebooks((prev) =>
+    prev.filter((nb) => nb.id !== id)
+  );
+
+  try {
+    await deleteNotebook(id);
+
+    if (activeNotebookId === id) {
+      const remaining = previous.filter(
+        (nb) => nb.id !== id
+      );
+
+      if (remaining.length) {
+        setActiveNotebookId(
+          remaining[0].id
+        );
+      }
+    }
+  } catch (err) {
+    console.error(err);
+
+    setNotebooks(previous);
+  }
+};
+
+const handleTogglePin = async (id) => {
+  const previous = notebooks;
+
+  const updated = notebooks
+    .map((nb) =>
+      nb.id === id
+        ? {
+            ...nb,
+            isPinned: !nb.isPinned,
+          }
+        : nb
+    )
+    .sort((a, b) => {
+      if (a.isPinned === b.isPinned) return 0;
+      return a.isPinned ? -1 : 1;
+    });
+
+  setNotebooks(updated);
+
+  try {
+    await togglePinNotebook(id);
+  } catch (err) {
+    console.error(err);
+
+    setNotebooks(previous);
+  }
+};
+
 
   const activeNotebook =
     notebooks.find((n) => n.id === activeNotebookId) ?? notebooks[0];
@@ -197,6 +288,9 @@ if (!activeNotebook) {
 <Sidebar
   notebooks={notebooks}
   onCreateNotebook={handleCreateNotebook}
+  onRenameNotebook={handleRenameNotebook}
+  onDeleteNotebook={handleDeleteNotebook}
+  onTogglePin={handleTogglePin}
 />
       <main className="flex min-w-0 flex-1 flex-col">
         <TopBar

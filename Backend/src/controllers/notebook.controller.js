@@ -39,7 +39,8 @@ export const getAllNotebooks = asyncHandler(async (req, res) => {
     },
     {
       $sort: {
-        updatedAt: -1,
+         isPinned: -1,
+    updatedAt: -1,
       },
     },
 
@@ -116,3 +117,26 @@ export const deleteNotebook = asyncHandler(async (req, res) => {
   });
 });
 
+export const togglePinNotebook = asyncHandler(
+  async (req, res) => {
+    const notebook = await Notebook.findById(
+      req.params.id
+    );
+
+    if (!notebook) {
+      return res.status(404).json({
+        success: false,
+        message: "Notebook not found",
+      });
+    }
+
+    notebook.isPinned = !notebook.isPinned;
+
+    await notebook.save();
+
+    res.json({
+      success: true,
+      data: notebook,
+    });
+  }
+);

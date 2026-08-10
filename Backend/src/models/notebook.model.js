@@ -21,11 +21,16 @@ const notebookSchema = new mongoose.Schema(
       maxlength: 500,
       default: "",
     },
+
+  isPinned: {
+  type: Boolean,
+  default: false,
+}
   },
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 notebookSchema.index({

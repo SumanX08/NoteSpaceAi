@@ -2,51 +2,50 @@ import mongoose from "mongoose";
 
 const sourceSchema = new mongoose.Schema(
   {
-    notebook: {
+    notebookId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Notebook",
       required: true,
       index: true,
     },
 
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
     type: {
       type: String,
-      required: true,
       enum: [
         "pdf",
         "website",
         "youtube",
         "text",
+        "transcript",
         "docx",
       ],
+      required: true,
+    },
+
+    title: {
+      type: String,
+      trim: true,
+    },
+
+    originalName: String,
+
+    url: String,
+
+    mimeType: String,
+
+    size: Number,
+
+    cloudinary: {
+      publicId: String,
+      resourceType: String,
+      url: String,
     },
 
     status: {
       type: String,
-      enum: [
-        "uploading",
-        "processing",
-        "ready",
-        "failed",
-      ],
+      enum: ["uploading", "processing", "ready", "failed"],
       default: "uploading",
       index: true,
-    },
-
-    content: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
-    },
-
-    metadata: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
     },
 
     error: {
@@ -56,13 +55,7 @@ const sourceSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    versionKey: false,
   }
 );
-
-sourceSchema.index({
-  notebook: 1,
-  createdAt: -1,
-});
 
 export default mongoose.model("Source", sourceSchema);

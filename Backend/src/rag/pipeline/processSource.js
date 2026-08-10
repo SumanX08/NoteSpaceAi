@@ -31,7 +31,13 @@ export async function processSource(sourceId) {
     await embedStage(context);
     await persistStage(context);
 
+    
+
     context.stats.processingTime = Date.now() - startTime;
+
+      source.status = "ready";
+  source.error = "";
+  await source.save();
 
     await finalizeStage(context);
 
@@ -48,6 +54,10 @@ export async function processSource(sourceId) {
       status: "failed",
       error: error.message,
     });
+
+    source.status = "failed";
+  source.error = error.message;
+  await source.save();
 
     throw error;
   }

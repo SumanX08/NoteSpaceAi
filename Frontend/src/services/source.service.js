@@ -1,11 +1,10 @@
 import api from "./api";
 
 export const uploadSource = async (formData) => {
-  return await api.post("/sources/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  return await api.post(
+    "/sources/upload",
+    formData
+  );
 };
 
 export const getSources = async (notebookId) => {
