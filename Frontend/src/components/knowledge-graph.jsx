@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { graphNodes, graphEdges, sources } from '@/lib/data';
-import { sourceIcon, sourceTypeLabel } from '@/lib/source-meta';
+import { sourceIcon, sourceTypeLabel } from '@/lib/source-meta'
 import { cn } from '@/lib/utils';
 const groupColor = {
   core: 'hsl(239 84% 67%)',
