@@ -36,7 +36,8 @@ export const uploadSource = asyncHandler(async (req, res) => {
 
   // =====================================================
   // Validate notebook ID
-  // =====================================================
+  // ===================================================
+ 
 
   if (!notebookId) {
     return res.status(400).json({
@@ -53,6 +54,11 @@ export const uploadSource = asyncHandler(async (req, res) => {
     _id: notebookId,
     userId: req.userId,
   });
+
+ 
+ // =====================================================
+// DOCUMENTS — PDF / DOCX
+// =====================================================
 
   if (!notebook) {
     return res.status(404).json({
