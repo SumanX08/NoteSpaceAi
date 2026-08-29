@@ -87,6 +87,7 @@ export default function ChatMessages({
                 >
                   <MessageBubble
                     message={message}
+                    sources={sources}
                     onCitationHover={
                       setHoveredCitation
                     }

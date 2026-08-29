@@ -9,10 +9,15 @@ const chatSchema = new mongoose.Schema(
       index: true,
     },
 
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
     title: {
       type: String,
       default: "New Chat",
-      trim: true,
     },
   },
   {
@@ -21,10 +26,15 @@ const chatSchema = new mongoose.Schema(
   }
 );
 
-chatSchema.index({
-  notebook: 1,
-  updatedAt: -1,
-});
+chatSchema.index(
+  {
+    notebook: 1,
+    userId: 1,
+  },
+  {
+    unique: true,
+  }
+);
 
 export default mongoose.model(
   "Chat",

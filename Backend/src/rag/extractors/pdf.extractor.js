@@ -1,34 +1,80 @@
 import axios from "axios";
 import pdf from "pdf-parse/lib/pdf-parse.js";
 
+
 export default async function extractPdf(source) {
   const url = source.cloudinary?.url;
 
   if (!url) {
-    throw new Error("Cloudinary PDF URL is missing.");
+    throw new Error(
+      "Cloudinary PDF URL is missing."
+    );
   }
 
-  console.log("Downloading PDF from Cloudinary...");
-  console.log("URL:", url);
+  console.log(
+    "Downloading PDF from Cloudinary..."
+  );
+
 
   const response = await axios.get(url, {
     responseType: "arraybuffer",
     timeout: 30000,
   });
 
-  const buffer = Buffer.from(response.data);
 
-  console.log("Downloaded PDF:", buffer.length, "bytes");
+  const buffer =
+    Buffer.from(response.data);
+
 
   if (!buffer.length) {
-    throw new Error("Downloaded PDF is empty.");
+    throw new Error(
+      "Downloaded PDF is empty."
+    );
   }
 
-  const result = await pdf(buffer);
+
+  // ----------------------------------
+  // Extract each page separately
+  // ----------------------------------
+
+  const pages = [];
+
+
+  const result = await pdf(buffer, {
+    pagerender: async (pageData) => {
+      const textContent =
+        await pageData.getTextContent();
+
+
+      const pageText =
+        textContent.items
+          .map((item) => item.str)
+          .join(" ");
+
+
+      pages.push({
+        page: pageData.pageNumber,
+        text: pageText,
+      });
+
+
+      return pageText;
+    },
+  });
+
+
+  console.log(
+    "PDF pages extracted:",
+    pages.length
+  );
+
 
   return {
-    text: result.text,
-    pages: result.numpages,
-    metadata: result.info || {},
+    pages,
+    totalPages:
+      result.numpages,
+
+    metadata:
+      result.info || {},
   };
 }

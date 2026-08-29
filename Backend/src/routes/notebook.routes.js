@@ -2,18 +2,23 @@ import { Router } from "express";
 
 import * as notebookController from "../controllers/notebook.controller.js";
 
+import { requireAuth } from "../middleware/auth.middleware.js";
+
 const router = Router();
 
-router.post("/",notebookController.createNotebook);
+// Protect every route below
+router.use(requireAuth);
 
-router.get("/",notebookController.getAllNotebooks);
+router.post("/", notebookController.createNotebook);
 
-router.get("/:id",notebookController.getNotebookById);
+router.get("/", notebookController.getAllNotebooks);
 
-router.patch("/:id",notebookController.updateNotebook);
+router.get("/:id", notebookController.getNotebookById);
 
-router.delete("/:id",notebookController.deleteNotebook);
+router.patch("/:id", notebookController.updateNotebook);
 
-router.patch("/:id/pin",notebookController.togglePinNotebook);
+router.delete("/:id", notebookController.deleteNotebook);
+
+router.patch("/:id/pin", notebookController.togglePinNotebook);
 
 export default router;

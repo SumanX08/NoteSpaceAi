@@ -1,6 +1,10 @@
 import Notebook from "../models/notebook.model.js";
-import Source from "../models/source.model.js"
+import Source from "../models/source.model.js";
 import asyncHandler from "../middleware/asyncHandler.js";
+
+// =====================================================
+// CREATE NOTEBOOK
+// =====================================================
 
 export const createNotebook = asyncHandler(async (req, res) => {
   const { title, emoji, description } = req.body;
@@ -9,6 +13,9 @@ export const createNotebook = asyncHandler(async (req, res) => {
     title,
     emoji,
     description,
+
+    // User comes from verified Clerk authentication
+    userId: req.userId,
   });
 
   res.status(201).json({
@@ -17,35 +24,48 @@ export const createNotebook = asyncHandler(async (req, res) => {
   });
 });
 
+// =====================================================
+// GET ALL NOTEBOOKS FOR LOGGED-IN USER
+// =====================================================
+
 export const getAllNotebooks = asyncHandler(async (req, res) => {
   const notebooks = await Notebook.aggregate([
+    {
+      $match: {
+        userId: req.userId,
+      },
+    },
+
     {
       $lookup: {
         from: "sources",
         localField: "_id",
-        foreignField: "notebook",
+        foreignField: "notebookId",
         as: "sources",
       },
     },
+
     {
       $addFields: {
-        sourceCount: { $size: "$sources" },
+        sourceCount: {
+          $size: "$sources",
+        },
       },
     },
+
     {
       $project: {
         sources: 0,
       },
     },
+
     {
       $sort: {
-         isPinned: -1,
-    updatedAt: -1,
+        isPinned: -1,
+        updatedAt: -1,
       },
     },
-
   ]);
-
 
   res.status(200).json({
     success: true,
@@ -54,10 +74,15 @@ export const getAllNotebooks = asyncHandler(async (req, res) => {
   });
 });
 
-export const getNotebookById = asyncHandler(async (req, res) => {
-  const notebook = await Notebook.findById(req.params.id);
-  const sources = await Source.find({ notebookId: req.params.id });
+// =====================================================
+// GET SINGLE NOTEBOOK
+// =====================================================
 
+export const getNotebookById = asyncHandler(async (req, res) => {
+  const notebook = await Notebook.findOne({
+    _id: req.params.id,
+    userId: req.userId,
+  });
 
   if (!notebook) {
     return res.status(404).json({
@@ -66,22 +91,34 @@ export const getNotebookById = asyncHandler(async (req, res) => {
     });
   }
 
-  console.log(notebook,sources)
+  const sources = await Source.find({
+    notebookId: notebook._id,
+  });
 
   res.status(200).json({
     success: true,
     data: notebook,
-    sources
+    sources,
   });
 });
 
-
-
+// =====================================================
+// UPDATE NOTEBOOK
+// =====================================================
 
 export const updateNotebook = asyncHandler(async (req, res) => {
-  const notebook = await Notebook.findByIdAndUpdate(
-    req.params.id,
-    req.body,
+  const { title, emoji, description } = req.body;
+
+  const notebook = await Notebook.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      userId: req.userId,
+    },
+    {
+      title,
+      emoji,
+      description,
+    },
     {
       new: true,
       runValidators: true,
@@ -101,8 +138,15 @@ export const updateNotebook = asyncHandler(async (req, res) => {
   });
 });
 
+// =====================================================
+// DELETE NOTEBOOK
+// =====================================================
+
 export const deleteNotebook = asyncHandler(async (req, res) => {
-  const notebook = await Notebook.findByIdAndDelete(req.params.id);
+  const notebook = await Notebook.findOneAndDelete({
+    _id: req.params.id,
+    userId: req.userId,
+  });
 
   if (!notebook) {
     return res.status(404).json({
@@ -117,11 +161,16 @@ export const deleteNotebook = asyncHandler(async (req, res) => {
   });
 });
 
+// =====================================================
+// PIN / UNPIN NOTEBOOK
+// =====================================================
+
 export const togglePinNotebook = asyncHandler(
   async (req, res) => {
-    const notebook = await Notebook.findById(
-      req.params.id
-    );
+    const notebook = await Notebook.findOne({
+      _id: req.params.id,
+      userId: req.userId,
+    });
 
     if (!notebook) {
       return res.status(404).json({

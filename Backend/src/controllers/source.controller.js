@@ -1,21 +1,31 @@
 import asyncHandler from "../middleware/asyncHandler.js";
 
 import Source from "../models/source.model.js";
+import Notebook from "../models/notebook.model.js";
+
 import vectorRepository from "../vectorstore/vector.repository.js";
+
 import { inngest } from "../inngest/index.js";
-import { uploadDocumentToCloudinary } from "../services/cloudinary.service.js";
+
+import {
+  uploadDocumentToCloudinary,
+} from "../services/cloudinary.service.js";
+
+// =====================================================
+// UPLOAD SOURCE
+// =====================================================
 
 export const uploadSource = asyncHandler(async (req, res) => {
   const file = req.file;
 
   if (file) {
-  console.log("Uploaded file:", {
-    originalname: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
-    bufferLength: file.buffer?.length,
-  });
-}
+    console.log("Uploaded file:", {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      bufferLength: file.buffer?.length,
+    });
+  }
 
   const {
     notebookId,
@@ -25,7 +35,7 @@ export const uploadSource = asyncHandler(async (req, res) => {
   } = req.body;
 
   // =====================================================
-  // Validate notebook
+  // Validate notebook ID
   // =====================================================
 
   if (!notebookId) {
@@ -36,86 +46,97 @@ export const uploadSource = asyncHandler(async (req, res) => {
   }
 
   // =====================================================
-  // PDF / DOCX
+  // IMPORTANT: Verify notebook ownership
   // =====================================================
 
- // =====================================================
-// DOCUMENTS — PDF / DOCX
-// =====================================================
+  const notebook = await Notebook.findOne({
+    _id: notebookId,
+    userId: req.userId,
+  });
 
-if (file) {
-  const mimeToType = {
-    "application/pdf": "pdf",
-
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-      "docx",
-
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-      "pptx",
-
-    "text/plain": "text",
-
-    "text/vtt": "transcript",
-  };
-
-  const detectedType = mimeToType[file.mimetype];
-
-  if (!detectedType) {
-    return res.status(400).json({
+  if (!notebook) {
+    return res.status(404).json({
       success: false,
-      message: `Unsupported document type: ${file.mimetype}`,
+      message: "Notebook not found or you do not have access.",
     });
   }
 
-  const uploaded =
-    await uploadDocumentToCloudinary(
-      file.buffer,
-      file.originalname,
-      file.mimetype
-    );
+  // =====================================================
+  // DOCUMENT FILES
+  // =====================================================
 
-  const source = await Source.create({
-    notebookId,
+  if (file) {
+    const mimeToType = {
+      "application/pdf": "pdf",
 
-    // IMPORTANT:
-    // Use the type detected from the actual file
-    type: detectedType,
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        "docx",
 
-    title:
-      title?.trim() ||
-      file.originalname.replace(
-        /\.(pdf|docx|pptx|txt|vtt)$/i,
-        ""
-      ),
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        "pptx",
 
-    originalName: file.originalname,
+      "text/plain": "text",
 
-    mimeType: file.mimetype,
+      "text/vtt": "transcript",
+    };
 
-    size: file.size,
+    const detectedType = mimeToType[file.mimetype];
 
-    cloudinary: {
-      publicId: uploaded.publicId,
-      resourceType: uploaded.resourceType,
-      url: uploaded.secureUrl,
-    },
+    if (!detectedType) {
+      return res.status(400).json({
+        success: false,
+        message: `Unsupported document type: ${file.mimetype}`,
+      });
+    }
 
-    status: "uploading",
-  });
+    const uploaded =
+      await uploadDocumentToCloudinary(
+        file.buffer,
+        file.originalname,
+        file.mimetype
+      );
 
-  await inngest.send({
-    name: "source/created",
+    const source = await Source.create({
+      notebookId,
 
-    data: {
-      sourceId: source._id.toString(),
-    },
-  });
+      type: detectedType,
 
-  return res.status(201).json({
-    success: true,
-    data: source,
-  });
-}
+      title:
+        title?.trim() ||
+        file.originalname.replace(
+          /\.(pdf|docx|pptx|txt|vtt)$/i,
+          ""
+        ),
+
+      originalName: file.originalname,
+
+      mimeType: file.mimetype,
+
+      size: file.size,
+
+      cloudinary: {
+        publicId: uploaded.publicId,
+        resourceType: uploaded.resourceType,
+        url: uploaded.secureUrl,
+      },
+
+      status: "uploading",
+    });
+
+    // Trigger background indexing
+    await inngest.send({
+      name: "source/created",
+
+      data: {
+        sourceId: source._id.toString(),
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: source,
+    });
+  }
 
   // =====================================================
   // WEBSITE
@@ -143,6 +164,7 @@ if (file) {
 
     await inngest.send({
       name: "source/created",
+
       data: {
         sourceId: source._id.toString(),
       },
@@ -180,6 +202,7 @@ if (file) {
 
     await inngest.send({
       name: "source/created",
+
       data: {
         sourceId: source._id.toString(),
       },
@@ -192,7 +215,7 @@ if (file) {
   }
 
   // =====================================================
-  // Unsupported source
+  // UNSUPPORTED SOURCE
   // =====================================================
 
   return res.status(400).json({
@@ -218,6 +241,19 @@ export const deleteSource = asyncHandler(async (req, res) => {
     });
   }
 
+  // Verify that the source's notebook belongs to this user
+  const notebook = await Notebook.findOne({
+    _id: source.notebookId,
+    userId: req.userId,
+  });
+
+  if (!notebook) {
+    return res.status(404).json({
+      success: false,
+      message: "Source not found or you do not have access.",
+    });
+  }
+
   await vectorRepository.deleteBySource(source._id);
 
   await Source.findByIdAndDelete(sourceId);
@@ -235,6 +271,19 @@ export const deleteSource = asyncHandler(async (req, res) => {
 
 export const getNotebookSources = asyncHandler(async (req, res) => {
   const { notebookId } = req.params;
+
+  // Verify notebook ownership
+  const notebook = await Notebook.findOne({
+    _id: notebookId,
+    userId: req.userId,
+  });
+
+  if (!notebook) {
+    return res.status(404).json({
+      success: false,
+      message: "Notebook not found or you do not have access.",
+    });
+  }
 
   const sources = await Source.find({
     notebookId,

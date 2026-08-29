@@ -2,19 +2,31 @@ import mongoose from "mongoose";
 
 const citationSchema = new mongoose.Schema(
   {
-    source: {
+    index: {
+      type: Number,
+      required: true,
+    },
+
+    sourceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Source",
       required: true,
     },
 
-    chunkId: String,
+    page: {
+      type: Number,
+      default: null,
+    },
 
-    page: Number,
+    chunkIndex: {
+      type: Number,
+      default: null,
+    },
 
-    score: Number,
-
-    text: String,
+    score: {
+      type: Number,
+      default: null,
+    },
   },
   {
     _id: false,
@@ -32,18 +44,13 @@ const messageSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: [
-        "system",
-        "user",
-        "assistant",
-      ],
+      enum: ["user", "assistant"],
       required: true,
     },
 
     content: {
       type: String,
       required: true,
-      trim: true,
     },
 
     citations: {
@@ -53,14 +60,8 @@ const messageSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    versionKey: false,
   }
 );
-
-messageSchema.index({
-  chat: 1,
-  createdAt: 1,
-});
 
 export default mongoose.model(
   "Message",
