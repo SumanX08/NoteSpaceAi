@@ -40,51 +40,7 @@ export default function MessageBubble({
     }, 1500);
   };
 
-  const handleCitationClick = (citation) => {
-    console.log(
-      "Citation clicked:",
-      citation
-    );
-
-    const sourceId =
-      citation.source ||
-      citation.sourceId;
-
-    const source = sources.find(
-      (item) =>
-        (item._id || item.id)?.toString() ===
-        sourceId?.toString()
-    );
-
-    if (!source) {
-      console.warn(
-        "Source not found for citation:",
-        sourceId
-      );
-      return;
-    }
-
-    // Store both source and citation details
-    setPreviewSource({
-      ...source,
-
-      citation: {
-        chunkId:
-          citation.chunkId ?? null,
-
-        page:
-          citation.page ?? null,
-
-        score:
-          citation.score ?? null,
-
-        text:
-          citation.text ?? null,
-      },
-    });
-
-    setPanelMode("preview");
-  };
+  
 
   if (isUser) {
     return (
@@ -138,9 +94,12 @@ export default function MessageBubble({
             onCitationHover={
               onCitationHover
             }
-            onCitationClick={
-              handleCitationClick
-            }
+             onCitationClick={(citation) => {
+    onCitationClick(
+      citation,
+      message.citations
+    );
+  }}
           />
 
           {/* Actions */}

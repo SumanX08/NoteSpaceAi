@@ -24,6 +24,40 @@ export default function ChatMessages({
     (state) => state.setHoveredCitation
   );
 
+  const setActiveMessageCitations = useAppStore(
+    (state) => state.setActiveMessageCitations
+  );
+
+  const setSelectedCitation = useAppStore(
+    (state) => state.setSelectedCitation
+  );
+
+  const setPreviewSource = useAppStore(
+    (state) => state.setPreviewSource
+  );
+
+ function handleCitationClick(citation) {
+  console.log("Citation clicked:", citation);
+
+  const source = sources.find(
+    (source) =>
+      String(source._id || source.id) ===
+      String(citation.sourceId)
+  );
+
+  if (!source) {
+    console.error(
+      "Source not found for citation:",
+      citation
+    );
+    return;
+  }
+
+  setPreviewSource(source);
+
+  setSelectedCitation(citation);
+}
+
   const hasIndexedSources = sources.length > 0;
 
   const suggestions = useMemo(
@@ -88,9 +122,8 @@ export default function ChatMessages({
                   <MessageBubble
                     message={message}
                     sources={sources}
-                    onCitationHover={
-                      setHoveredCitation
-                    }
+                    onCitationHover={setHoveredCitation}
+                    onCitationClick={handleCitationClick}
                   />
                 </motion.div>
               ))}

@@ -8,48 +8,63 @@ import CitationPill from "./CitationPill";
 export default function Markdown({
   content,
   citations = [],
-  onCitationHover,
   onCitationClick,
 }) {
+  const parts = content.split(/(\[\d+\])/g);
+
   return (
     <div className="prose prose-neutral dark:prose-invert max-w-none prose-pre:p-0">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          pre: ({ children }) => children,
+      {parts.map((part, index) => {
+        const match = part.match(/^\[(\d+)\]$/);
 
-          code(props) {
-            return <CodeBlock {...props} />;
-          },
+        if (match) {
+          const citationIndex =
+            Number(match[1]);
 
-          table(props) {
-            return (
-              <MarkdownTable {...props} />
+          const citation =
+            citations.find(
+              (item) =>
+                item.index === citationIndex
             );
-          },
-        }}
-      >
-        {content}
-      </ReactMarkdown>
 
-      {citations.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-xs text-muted-foreground">
-            Sources:
-          </span>
+          if (citation) {
+            return (
+              <CitationPill
+                key={index}
+                citation={citation}
+                onClick={onCitationClick}
+              />
+            );
+          }
+        }
 
-          {citations.map((citation) => (
-            <CitationPill
-              key={
-                `${citation.sourceId}-${citation.chunkIndex}`
-              }
-              citation={citation}
-              onHover={onCitationHover}
-              onClick={onCitationClick}
-            />
-          ))}
-        </div>
-      )}
+        return (
+          <ReactMarkdown
+            key={index}
+            remarkPlugins={[remarkGfm]}
+            components={{
+              pre: ({ children }) =>
+                children,
+
+              code(props) {
+                return (
+                  <CodeBlock {...props} />
+                );
+              },
+
+              table(props) {
+                return (
+                  <MarkdownTable
+                    {...props}
+                  />
+                );
+              },
+            }}
+          >
+            {part}
+          </ReactMarkdown>
+        );
+      })}
     </div>
   );
 }

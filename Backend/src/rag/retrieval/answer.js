@@ -76,34 +76,57 @@ Do not cite information that is not present in the context.
       .message.content;
 
 
-  const uniqueSources = [];
+  // Extract only citation numbers actually used
+  // by the LLM in the final answer.
+  const usedCitationIndexes = [
+    ...new Set(
+      [...answer.matchAll(/\[(\d+)\]/g)]
+        .map((match) => Number(match[1]))
+    ),
+  ];
 
-const seenSources = new Set();
 
-for (const chunk of chunks) {
-  const sourceId = chunk.sourceId.toString();
+  // Map only those citations back to
+  // their original retrieved chunks.
+  const citations = usedCitationIndexes
+    .map((index) => {
 
-  if (seenSources.has(sourceId)) {
-    continue;
-  }
+      const chunk =
+        chunks[index - 1];
 
-  seenSources.add(sourceId);
+      if (!chunk) {
+        return null;
+      }
 
-  uniqueSources.push({
-    sourceId,
-    page: chunk.page ?? null,
-    chunkIndex: chunk.chunkIndex,
-    score: chunk.score,
-  });
-}
+      return {
+        index,
 
-const citations = uniqueSources.map(
-  (citation, index) => ({
-    index: index + 1,
-    ...citation,
-  })
-);
+        sourceId:
+          String(chunk.sourceId),
 
+        page:
+          chunk.page ?? null,
+
+        chunkIndex:
+          chunk.chunkIndex,
+
+        score:
+          chunk.score,
+
+        // Keep the exact retrieved chunk
+        // for the Citations panel.
+        text:
+          chunk.text,
+      };
+
+    })
+    .filter(Boolean);
+
+
+  console.log(
+    "ANSWER:",
+    answer
+  );
 
   console.log(
     "RESULT CITATIONS:",

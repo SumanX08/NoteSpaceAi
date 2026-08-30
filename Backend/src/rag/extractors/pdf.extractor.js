@@ -1,7 +1,6 @@
 import axios from "axios";
 import pdf from "pdf-parse/lib/pdf-parse.js";
 
-
 export default async function extractPdf(source) {
   const url = source.cloudinary?.url;
 
@@ -15,16 +14,12 @@ export default async function extractPdf(source) {
     "Downloading PDF from Cloudinary..."
   );
 
-
   const response = await axios.get(url, {
     responseType: "arraybuffer",
     timeout: 30000,
   });
 
-
-  const buffer =
-    Buffer.from(response.data);
-
+  const buffer = Buffer.from(response.data);
 
   if (!buffer.length) {
     throw new Error(
@@ -32,49 +27,39 @@ export default async function extractPdf(source) {
     );
   }
 
-
-  // ----------------------------------
-  // Extract each page separately
-  // ----------------------------------
-
   const pages = [];
-
 
   const result = await pdf(buffer, {
     pagerender: async (pageData) => {
       const textContent =
         await pageData.getTextContent();
 
-
-      const pageText =
-        textContent.items
-          .map((item) => item.str)
-          .join(" ");
-
+      const pageText = textContent.items
+        .map((item) => item.str)
+        .join(" ")
+        .trim();
 
       pages.push({
-        page: pageData.pageNumber,
+        page: pages.length + 1,
         text: pageText,
       });
-
 
       return pageText;
     },
   });
-
 
   console.log(
     "PDF pages extracted:",
     pages.length
   );
 
-
   return {
-    pages,
-    totalPages:
-      result.numpages,
+    text: result.text,
 
-    metadata:
-      result.info || {},
+    pages,
+
+    totalPages: result.numpages,
+
+    metadata: result.info || {},
   };
 }

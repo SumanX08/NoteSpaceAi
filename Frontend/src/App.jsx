@@ -23,6 +23,8 @@ import {
   togglePinNotebook,
 } from "@/services/notebook.service";
 
+import { getSources } from "@/services/source.service";
+
 import { useAppStore } from "@/store/appStore";
 
 
@@ -64,6 +66,10 @@ function NotebookApp() {
     setActiveTab,
     rightPanelOpen,
   } = useAppStore();
+
+  const setActiveMessageCitations = useAppStore(
+  (state) => state.setActiveMessageCitations
+);
 
 
   // ======================================================
@@ -206,42 +212,45 @@ function NotebookApp() {
     }
 
 
-    const notebooksWithMessages =
-      await Promise.all(
+  const notebooksWithData =
+  await Promise.all(
+    notebookData.map(
+      async (notebook) => {
 
-        notebookData.map(
-          async (notebook) => {
+        const [messages, sourcesRes] =
+          await Promise.all([
+            loadMessages(notebook._id),
+            getSources(notebook._id),
+          ]);
 
-            const messages =
-              await loadMessages(
-                notebook._id
-              );
+        console.log(
+          "Sources response for notebook:",
+          notebook._id,
+          sourcesRes
+        );
 
+        const sources =
+          sourcesRes.data ?? [];
 
-            return {
+        return {
+          ...notebook,
 
-              ...notebook,
+          id: notebook._id,
 
-              id: notebook._id,
+          isPinned:
+            notebook.isPinned ?? false,
 
-              isPinned:
-                notebook.isPinned ?? false,
+          sources,
 
-              sources:
-                notebook.sources ?? [],
-
-              messages,
-
-            };
-
-          }
-        )
-
-      );
+          messages,
+        };
+      }
+    )
+  );
 
 
     const sortedNotebooks =
-      notebooksWithMessages.sort(
+      notebooksWithData.sort(
         (a, b) => {
 
           if (
@@ -366,6 +375,10 @@ function NotebookApp() {
         res
       );
 
+      setActiveMessageCitations(
+  res.citations || []
+);
+
 
       const assistantMessage = {
         id: crypto.randomUUID(),
@@ -377,6 +390,8 @@ function NotebookApp() {
         citations:
           res.citations ?? [],
       };
+
+      console.log(res)
 
 
       // ----------------------------------------------

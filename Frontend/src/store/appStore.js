@@ -11,6 +11,9 @@ export const useAppStore = create((set) => ({
   rightPanelOpen: true,
   panelMode: "sources",
 
+  activeMessageCitations: [],
+  selectedCitation: null,
+
   // Preview
   previewSource: null,
   hoveredCitation: null,
@@ -35,6 +38,19 @@ export const useAppStore = create((set) => ({
   setPanelMode: (mode) =>
     set({ panelMode: mode }),
 
+  setActiveMessageCitations: (citations) =>
+  set({
+    activeMessageCitations: citations,
+  }),
+
+setSelectedCitation: (citation) =>
+  set({
+    selectedCitation: citation,
+    panelMode: "citations",
+    rightPanelOpen: true,
+  }),
+
+
   setPreviewSource: (source) =>
     set({ previewSource: source }),
 
@@ -42,9 +58,11 @@ export const useAppStore = create((set) => ({
     set({ hoveredCitation: citation }),
 
   resetRightPanel: () =>
-    set({
-      panelMode: "sources",
-      previewSource: null,
-      hoveredCitation: null,
-    }),
+  set({
+    panelMode: "sources",
+    activeMessageCitations: [],
+    selectedCitation: null,
+    previewSource: null,
+    hoveredCitation: null,
+  }),
 }));

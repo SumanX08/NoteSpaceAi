@@ -2,29 +2,24 @@ import { cn } from "@/lib/utils";
 
 export default function CitationPill({
   citation,
-  onHover,
   onClick,
+  onHover,
 }) {
   return (
     <button
       type="button"
+      onClick={() =>
+        onClick?.(citation)
+      }
       onMouseEnter={() =>
         onHover?.(citation)
       }
       onMouseLeave={() =>
         onHover?.(null)
       }
-      onClick={() =>
-        onClick?.(citation)
-      }
       className={cn(
-        "mx-0.5 rounded-md bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/20"
+        "mx-0.5 inline-flex rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary hover:bg-primary/20"
       )}
-      title={
-        citation.page
-          ? `Source ${citation.index} • Page ${citation.page}`
-          : `Source ${citation.index}`
-      }
     >
       [{citation.index}]
     </button>
