@@ -27,6 +27,12 @@ const citationSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+
+    // Add this
+    text: {
+      type: String,
+      default: "",
+    },
   },
   {
     _id: false,

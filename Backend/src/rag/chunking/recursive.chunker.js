@@ -1,14 +1,15 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 export default async function chunkText(text) {
-  // Safety check
   if (!text || typeof text !== "string") {
-    console.log("Invalid text received for chunking:", text);
+    console.log(
+      "Invalid text received for chunking:",
+      text
+    );
 
     return [];
   }
 
-  // Clean extracted text
   const cleanText = text
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
@@ -16,7 +17,9 @@ export default async function chunkText(text) {
     .trim();
 
   if (!cleanText) {
-    console.log("Text is empty after cleaning");
+    console.log(
+      "Text is empty after cleaning"
+    );
 
     return [];
   }
@@ -29,6 +32,7 @@ export default async function chunkText(text) {
   const splitter =
     new RecursiveCharacterTextSplitter({
       chunkSize: 1200,
+
       chunkOverlap: 200,
 
       separators: [
@@ -44,16 +48,58 @@ export default async function chunkText(text) {
       cleanText,
     ]);
 
+  let searchFrom = 0;
+
   const chunks =
-    documents.map((document, index) => ({
-      chunkIndex: index,
+    documents.map(
+      (document, index) => {
 
-      text: document.pageContent,
+        const chunkText =
+          document.pageContent;
 
-      metadata: {
-        ...document.metadata,
-      },
-    }));
+        let startIndex =
+          cleanText.indexOf(
+            chunkText,
+            Math.max(
+              0,
+              searchFrom - 200
+            )
+          );
+
+        if (startIndex === -1) {
+          startIndex =
+            cleanText.indexOf(chunkText);
+        }
+
+        const endIndex =
+          startIndex !== -1
+            ? startIndex +
+              chunkText.length
+            : null;
+
+        if (startIndex !== -1) {
+          searchFrom =
+            startIndex + chunkText.length;
+        }
+
+        return {
+          chunkIndex: index,
+
+          text: chunkText,
+
+          metadata: {
+            ...document.metadata,
+
+            startIndex:
+              startIndex !== -1
+                ? startIndex
+                : null,
+
+            endIndex,
+          },
+        };
+      }
+    );
 
   console.log(
     "Chunks created:",

@@ -98,26 +98,46 @@ Do not cite information that is not present in the context.
         return null;
       }
 
-      return {
-        index,
+     return {
+  index,
 
-        sourceId:
-          String(chunk.sourceId),
+  sourceId:
+    String(chunk.sourceId),
 
-        page:
-          chunk.page ?? null,
+  page:
+    chunk.page ??
+    chunk.metadata?.page ??
+    null,
 
-        chunkIndex:
-          chunk.chunkIndex,
+  chunkIndex:
+    chunk.chunkIndex,
 
-        score:
-          chunk.score,
+  score:
+    chunk.score,
 
-        // Keep the exact retrieved chunk
-        // for the Citations panel.
-        text:
-          chunk.text,
-      };
+  text:
+    chunk.text,
+
+  start:
+    chunk.start ??
+    chunk.metadata?.start ??
+    null,
+
+  end:
+    chunk.end ??
+    chunk.metadata?.end ??
+    null,
+
+  startTime:
+    chunk.startTime ??
+    chunk.metadata?.startTime ??
+    null,
+
+  endTime:
+    chunk.endTime ??
+    chunk.metadata?.endTime ??
+    null,
+};
 
     })
     .filter(Boolean);

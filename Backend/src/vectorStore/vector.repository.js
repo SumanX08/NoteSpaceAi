@@ -36,19 +36,31 @@ class VectorRepository {
 
         vector: chunk.embedding,
 
-        payload: {
-          notebookId:
-            chunk.notebook.toString(),
+       payload: {
+  notebookId:
+    chunk.notebook.toString(),
 
-          sourceId:
-            chunk.source.toString(),
+  sourceId:
+    chunk.source.toString(),
 
-          chunkIndex:
-            chunk.chunkIndex,
+  chunkIndex:
+    chunk.chunkIndex,
 
-          page:
-            chunk.metadata?.page ?? null,
-        },
+  page:
+    chunk.metadata?.page ?? null,
+
+  start:
+    chunk.metadata?.start ?? null,
+
+  end:
+    chunk.metadata?.end ?? null,
+
+  startTime:
+    chunk.metadata?.startTime ?? null,
+
+  endTime:
+    chunk.metadata?.endTime ?? null,
+},
       }));
 
     console.log(
@@ -135,19 +147,36 @@ class VectorRepository {
     );
 
     return (result.points ?? []).map(
-      (point) => ({
-        vectorId: point.id,
-        score: point.score,
-        notebookId:
-          point.payload?.notebookId,
-        sourceId:
-          point.payload?.sourceId,
-        chunkIndex:
-          point.payload?.chunkIndex,
-        page:
-          point.payload?.page,
-      })
-    );
+  (point) => ({
+    vectorId: point.id,
+
+    score: point.score,
+
+    notebookId:
+      point.payload?.notebookId,
+
+    sourceId:
+      point.payload?.sourceId,
+
+    chunkIndex:
+      point.payload?.chunkIndex,
+
+    page:
+      point.payload?.page,
+
+    start:
+      point.payload?.start,
+
+    end:
+      point.payload?.end,
+
+    startTime:
+      point.payload?.startTime,
+
+    endTime:
+      point.payload?.endTime,
+  })
+);
   }
 
   async deleteBySource(sourceId) {

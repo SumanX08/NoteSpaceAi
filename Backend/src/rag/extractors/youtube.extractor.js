@@ -2,7 +2,9 @@ import { YoutubeTranscript } from "youtube-transcript";
 
 export default async function extractYoutube(source) {
   if (!source.url) {
-    throw new Error("YouTube URL is missing.");
+    throw new Error(
+      "YouTube URL is missing."
+    );
   }
 
   const transcript =
@@ -16,16 +18,28 @@ export default async function extractYoutube(source) {
     );
   }
 
-  const text = transcript
-    .map((item) => item.text)
+  const segments = transcript.map((item) => ({
+    text: item.text,
+    startTime: item.offset,
+    duration: item.duration,
+    endTime:
+      item.offset + item.duration,
+  }));
+
+  const text = segments
+    .map((segment) => segment.text)
     .join(" ");
 
   return {
     text,
 
+    segments,
+
     metadata: {
       url: source.url,
-      duration: transcript.at(-1)?.offset || 0,
+
+      duration:
+        segments.at(-1)?.endTime || 0,
     },
   };
 }

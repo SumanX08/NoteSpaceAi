@@ -11,7 +11,17 @@ import {clerkMiddleware} from "@clerk/express"
 
 const app=express()
 
-app.use(cors())
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL,
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 app.use(express.json())
 app.use(clerkMiddleware());
 app.use(express.urlencoded({ extended: true }));
