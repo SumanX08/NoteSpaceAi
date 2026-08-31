@@ -1,7 +1,5 @@
 import "dotenv/config";
 import { createCollection } from "./vectorstore/createCollections.js";
-
-
 import OpenAI from "openai";
 
 const openai = new OpenAI({

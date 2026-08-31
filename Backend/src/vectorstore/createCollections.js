@@ -1,4 +1,4 @@
-import qdrantClient from './qdrant.client.js'
+import qdrantClient from "./qdrant.client.js";
 export async function createCollection() {
   const collectionName = process.env.QDRANT_COLLECTION;
 
