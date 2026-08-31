@@ -14,6 +14,7 @@ const app=express()
 const allowedOrigins = [
   "http://localhost:5173",
   process.env.FRONTEND_URL,
+  "https://note-space-ai.vercel.app"
 ];
 
 app.use(
