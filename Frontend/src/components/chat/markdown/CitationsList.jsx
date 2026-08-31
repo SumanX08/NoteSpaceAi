@@ -1,5 +1,13 @@
-import { FileText, ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import {
+  FileText,
+  Hash,
+  BookOpen,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { openCitationSource } from "@/lib/openCitationSource";
 
 export default function CitationsList({
   citations = [],
@@ -7,10 +15,12 @@ export default function CitationsList({
   selectedCitation,
   onCitationClick,
 }) {
+  const [expanded, setExpanded] = useState(null);
+
   if (!citations.length) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
-        Select a citation from a response to view its details.
+        No citations available for this response.
       </div>
     );
   }
@@ -30,68 +40,124 @@ export default function CitationsList({
       <div className="space-y-3">
         {citations.map((citation) => {
           const source = sources.find(
-            (item) =>
-              String(item._id || item.id) ===
+            (source) =>
+              String(source._id || source.id) ===
               String(citation.sourceId)
           );
 
           const isSelected =
-            selectedCitation?.index ===
-              citation.index &&
-            String(selectedCitation?.sourceId) ===
-              String(citation.sourceId);
+            selectedCitation?.index === citation.index;
+
+          const isExpanded =
+            expanded === citation.index;
+
+          const fullText =
+            citation.text || "";
+
+          const previewText =
+            fullText.length > 350
+              ? `${fullText.slice(0, 350)}...`
+              : fullText;
 
           return (
-            <button
+            <div
               key={`${citation.sourceId}-${citation.index}`}
-              type="button"
-              onClick={() => {
-                if (!source) return;
-
-                onCitationClick?.(
-                  citation,
-                  source
-                );
-              }}
-              className={cn(
-                "flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors",
+              className={`rounded-xl border p-4 transition ${
                 isSelected
                   ? "border-primary bg-primary/5"
-                  : "border-border hover:bg-muted/50"
-              )}
+                  : "border-border"
+              }`}
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
-                [{citation.index}]
-              </div>
+              {/* Header */}
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <span className="text-sm font-semibold text-primary">
+                    [{citation.index}]
+                  </span>
+                </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+
                     <p className="truncate text-sm font-medium">
                       {source?.title || "Unknown source"}
                     </p>
-
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {citation.page
-                        ? `Page ${citation.page}`
-                        : `Chunk ${citation.chunkIndex + 1}`}
-                    </p>
                   </div>
 
-                  <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </div>
+                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    {citation.page && (
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="h-3 w-3" />
+                        Page {citation.page}
+                      </span>
+                    )}
 
-                <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <FileText className="h-3.5 w-3.5" />
-
-                  <span>
-                    {source
-                      ? "View source"
-                      : "Source unavailable"}
-                  </span>
+                    {citation.chunkIndex !== null &&
+                      citation.chunkIndex !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <Hash className="h-3 w-3" />
+                          Chunk {citation.chunkIndex + 1}
+                        </span>
+                      )}
+                  </div>
                 </div>
               </div>
-            </button>
+
+              {/* Relevant excerpt */}
+              {fullText && (
+                <div className="mt-4 rounded-lg bg-muted/50 p-3">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    {isExpanded
+                      ? fullText
+                      : previewText}
+                  </p>
+
+                  {fullText.length > 350 && (
+                    <button
+                      onClick={() =>
+                        setExpanded(
+                          isExpanded
+                            ? null
+                            : citation.index
+                        )
+                      }
+                      className="mt-3 flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                    >
+                      {isExpanded ? (
+                        <>
+                          Show less
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </>
+                      ) : (
+                        <>
+                          Show more
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* View source */}
+              <button
+  onClick={() => {
+    if (!source) return;
+
+    openCitationSource(
+      source,
+      citation
+    );
+  }}
+  disabled={!source}
+  className="mt-4 flex items-center gap-2 text-xs font-medium text-primary transition hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+>
+                <ExternalLink className="h-3.5 w-3.5" />
+
+                View source
+              </button>
+            </div>
           );
         })}
       </div>
