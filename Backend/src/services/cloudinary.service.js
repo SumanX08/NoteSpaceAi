@@ -1,75 +1,55 @@
 import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "stream";
 
-const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-const uploadPreset =
-  process.env.CLOUDINARY_UPLOAD_PRESET;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-export async function uploadDocumentToCloudinary(
+export function uploadDocumentToCloudinary(
   buffer,
   filename,
   mimeType
 ) {
-  if (!cloudName) {
-    throw new Error(
-      "Cloudinary is not configured."
-    );
-  }
-
-  if (!buffer || buffer.length === 0) {
-    throw new Error("File buffer is empty.");
-  }
-
-  const form = new FormData();
-
-  form.append(
-    "file",
-    new Blob(
-      [new Uint8Array(buffer)],
-      { type: mimeType }
-    ),
-    filename
-  );
-
-  form.append(
-    "upload_preset",
-    uploadPreset
-  );
-
-  form.append(
-    "folder",
-    "notespace/documents"
-  );
-
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
-    {
-      method: "POST",
-      body: form,
+  return new Promise((resolve, reject) => {
+    if (!buffer || buffer.length === 0) {
+      return reject(
+        new Error("File buffer is empty.")
+      );
     }
-  );
 
-  const result = await response.json();
+    const uploadStream =
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: "raw",
+          folder: "notespace/documents",
+          public_id: filename
+            .replace(/\.[^/.]+$/, "")
+            .replace(/[^a-zA-Z0-9_-]/g, "_"),
 
-  if (!response.ok) {
-    console.error(
-      "Cloudinary upload error:",
-      result
-    );
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) {
+            console.error(
+              "Cloudinary upload error:",
+              error
+            );
 
-    throw new Error(
-      result.error?.message ||
-        `Cloudinary upload failed (${response.status})`
-    );
-  }
+            return reject(error);
+          }
 
-  return {
-    secureUrl: result.secure_url,
-    publicId: result.public_id,
-    bytes: result.bytes,
-    originalFilename: filename,
-    resourceType:
-      result.resource_type === "image"
-        ? "image"
-        : "raw",
-  };
+          resolve({
+            secureUrl: result.secure_url,
+            publicId: result.public_id,
+            bytes: result.bytes,
+            originalFilename: filename,
+            resourceType: result.resource_type,
+          });
+        }
+      );
+
+    Readable.from(buffer).pipe(uploadStream);
+  });
 }
