@@ -11,7 +11,6 @@ import persistStage from "../../rag/pipeline/persist.stage.js";
 export const processSource = inngest.createFunction(
   {
     id: "process-source",
-    name: "Process RAG Source",
     retries: 2,
 
     triggers: {
@@ -20,7 +19,20 @@ export const processSource = inngest.createFunction(
   },
 
   async ({ event, step }) => {
-    const { sourceId } = event.data;
+    console.log("========== INNGEST EVENT ==========");
+    console.log(JSON.stringify(event, null, 2));
+
+    const sourceId = event.data?.sourceId;
+
+    console.log("Received sourceId:", sourceId);
+
+    if (!sourceId) {
+      throw new Error(
+        `sourceId missing from event. Event data: ${JSON.stringify(
+          event.data
+        )}`
+      );
+    }
 
     await step.run("process-rag-source", async () => {
       const source = await Source.findById(sourceId);
@@ -51,6 +63,8 @@ export const processSource = inngest.createFunction(
         });
 
       } catch (error) {
+        console.error("Source processing failed:", error);
+
         await Source.findByIdAndUpdate(sourceId, {
           status: "failed",
           error: error.message,
