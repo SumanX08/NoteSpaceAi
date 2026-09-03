@@ -4,7 +4,7 @@ import Chat from "../models/chat.model.js";
 import Message from "../models/message.model.js";
 
 import search from "../rag/retrieval/search.js";
-import generateAnswer from "../rag/retrieval/answer.js";
+import streamAnswer from "../rag/retrieval/answer.js";
 
 
 // =====================================
@@ -16,63 +16,39 @@ export const askQuestion = asyncHandler(
 
     console.log("\n========== CHAT START ==========");
 
-    console.log("BODY:", req.body);
-
-    console.log("AUTH:", req.auth);
-
-
     const {
       notebookId,
       question,
     } = req.body;
 
-
-    const userId =
-      req.userId;
-
+    const userId = req.userId;
 
     console.log("USER ID:", userId);
-
     console.log("NOTEBOOK ID:", notebookId);
-
+    console.log("QUESTION:", question);
 
     // ================================
     // VALIDATION
     // ================================
 
     if (!userId) {
-
-      console.log("❌ NO USER ID");
-
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
       });
-
     }
 
-
     if (!notebookId || !question) {
-
-      console.log("❌ MISSING DATA");
-
       return res.status(400).json({
         success: false,
         message:
           "Notebook ID and question are required.",
       });
-
     }
 
-
     // ================================
-    // FIND OR CREATE CHAT
+    // FIND / CREATE CHAT
     // ================================
-
-    console.log(
-      "Finding chat..."
-    );
-
 
     let chat =
       await Chat.findOne({
@@ -80,20 +56,7 @@ export const askQuestion = asyncHandler(
         userId,
       });
 
-
-    console.log(
-      "Existing chat:",
-      chat
-    );
-
-
     if (!chat) {
-
-      console.log(
-        "Creating new chat..."
-      );
-
-
       chat =
         await Chat.create({
           notebook: notebookId,
@@ -102,51 +65,27 @@ export const askQuestion = asyncHandler(
             question.substring(0, 50),
         });
 
-
       console.log(
         "✅ CHAT CREATED:",
         chat._id.toString()
       );
-
     }
 
-
-    
     // ================================
     // SAVE USER MESSAGE
     // ================================
 
-    console.log(
-      "Saving user message..."
-    );
-
-
-    const userMessage =
-      await Message.create({
-
-        chat: chat._id,
-
-        role: "user",
-
-        content: question,
-
-      });
-
-
-    console.log(
-      "✅ USER MESSAGE SAVED:",
-      userMessage._id.toString()
-    );
-
+    await Message.create({
+      chat: chat._id,
+      role: "user",
+      content: question,
+    });
 
     // ================================
     // SEARCH RAG
     // ================================
 
-    console.log(
-      "Searching RAG..."
-    );
-
+    console.log("🔍 Searching RAG...");
 
     const chunks =
       await search(
@@ -154,88 +93,128 @@ export const askQuestion = asyncHandler(
         notebookId
       );
 
-
     console.log(
       "Chunks found:",
       chunks?.length
     );
 
-
     // ================================
-    // GENERATE ANSWER
+    // STREAMING HEADERS
     // ================================
 
-    console.log(
-      "Generating answer..."
+    res.status(200);
+
+    res.setHeader(
+      "Content-Type",
+      "text/event-stream"
     );
 
+    res.setHeader(
+      "Cache-Control",
+      "no-cache"
+    );
 
-    const result =
-      await generateAnswer(
-        question,
-        chunks
+    res.setHeader(
+      "Connection",
+      "keep-alive"
+    );
+
+    res.setHeader(
+      "X-Accel-Buffering",
+      "no"
+    );
+
+    // Helpful for proxies
+    if (res.flushHeaders) {
+      res.flushHeaders();
+    }
+
+    // ================================
+    // SEND EVENT HELPER
+    // ================================
+
+    const sendEvent = (event, data) => {
+      res.write(
+        `event: ${event}\n`
       );
 
-
-    console.log(
-      "Answer generated"
-    );
-
+      res.write(
+        `data: ${JSON.stringify(data)}\n\n`
+      );
+    };
 
     // ================================
-    // SAVE AI MESSAGE
+    // RAG COMPLETE
+    // ================================
+
+    sendEvent("rag_complete", {
+      chunkCount:
+        chunks?.length || 0,
+    });
+
+    // ================================
+    // GENERATE + STREAM
     // ================================
 
     console.log(
-      "Saving assistant message..."
+      "✦ Starting streamed generation..."
     );
 
+    const result =
+      await streamAnswer(
+        question,
+        chunks,
+        (token) => {
+
+          sendEvent("token", {
+            content: token,
+          });
+
+        }
+      );
+
     console.log(
-  "RESULT CITATIONS:",
-  result.citations
-);
+      "✅ Generation complete"
+    );
+
+    // ================================
+    // SAVE ASSISTANT MESSAGE
+    // ================================
 
     const assistantMessage =
       await Message.create({
-
         chat: chat._id,
-
         role: "assistant",
-
         content: result.answer,
-
         citations:
           result.citations ?? [],
-
       });
-
 
     console.log(
       "✅ ASSISTANT MESSAGE SAVED:",
       assistantMessage._id.toString()
     );
 
+    // ================================
+    // SEND FINAL EVENT
+    // ================================
 
-    console.log(
-      "========== CHAT END ==========\n"
-    );
-
-
-    return res.status(200).json({
-
-      success: true,
-
-      answer:
-        assistantMessage.content,
-
-      citations:
-        assistantMessage.citations,
+    sendEvent("done", {
+      messageId:
+        assistantMessage._id.toString(),
 
       chatId:
         chat._id.toString(),
 
+      citations:
+        result.citations ?? [],
     });
 
+    res.end();
+
+    console.log(
+      "========== CHAT END ==========\n"
+    );
   }
 );
 

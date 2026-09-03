@@ -17,7 +17,7 @@ export default function SidebarHeader({
         </div>
 
         <span className="text-[15px] font-semibold tracking-tight">
-          Lumen
+          NoteSpace AI
         </span>
 
         <span className="ml-auto rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
