@@ -19,9 +19,6 @@ import { useNotebookData } from "@/hooks/useNotebookData";
 import { useChat } from "@/hooks/useChat";
 
 
-// ======================================================
-// AUTH WRAPPER
-// ======================================================
 
 function App() {
   return (
