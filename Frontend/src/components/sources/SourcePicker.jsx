@@ -54,7 +54,6 @@ const addOptions = [
 
 function SourcePicker({  notebookId,
   setUploading,
-  setSourceList,
   onClose,
   onPick,
 }) {
@@ -64,31 +63,35 @@ const [url, setUrl] = useState("");
 const [text, setText] = useState("");
 
 const handleFile = async (e) => {
-    const file = e.target.files?.[0];
+  const file = e.target.files?.[0];
 
-    if (!file) return;
+  if (!file) return;
 
-    const formData = new FormData();
+  const formData = new FormData();
 
-    formData.append("file", file);
-formData.append("notebookId", notebookId);
-formData.append("type", selectedType);
+  formData.append("file", file);
+  formData.append("notebookId", notebookId);
+  formData.append("type", selectedType);
 
-    try {
-        setUploading(true);
+  try {
+    setUploading(true);
 
-        await uploadSource(formData);
+    await uploadSource(formData);
 
-        const res = await getSources(notebookId);
+    const res = await getSources(notebookId);
 
-        setSourceList(res.data);
+    console.log(
+      "🔥 SOURCES AFTER UPLOAD:",
+      res.data
+    );
 
-        onClose();
-    } catch (err) {
-        console.error(err);
-    } finally {
-        setUploading(false);
-    }
+    onPick(res.data);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setUploading(false);
+  }
 };
 const handleWebsite = async () => {
   try {
@@ -99,14 +102,17 @@ const handleWebsite = async () => {
     formData.append("notebookId", notebookId);
     formData.append("type", "website");
     formData.append("url", url);
-    console.log(url)
 
     await uploadSource(formData);
 
     const res = await getSources(notebookId);
+
     setSourceList(res.data);
 
+    onPick(res.data);
+
     onClose();
+
   } catch (err) {
     console.error(err);
   } finally {
@@ -131,7 +137,10 @@ const handleYoutube = async () => {
 
     setSourceList(res.data);
 
+    onPick(res.data);
+
     onClose();
+
   } catch (err) {
     console.error(err);
   } finally {

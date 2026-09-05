@@ -60,33 +60,59 @@ export const sourceTypeLabel = {
 
 
 export const statusMeta = {
-
   uploading: {
     label: "Uploading",
-    text: "text-yellow-500",
-    dot: "bg-yellow-500",
-    bg: "bg-yellow-500/10",
+    text: "text-blue-400",
+    bg: "bg-blue-400/10",
+    dot: "bg-blue-400",
+    progress: 10,
   },
 
-  processing: {
-    label: "Indexing",
-    text: "text-blue-500",
-    dot: "bg-blue-500",
-    bg: "bg-blue-500/10",
+  extracting: {
+    label: "Extracting",
+    text: "text-yellow-400",
+    bg: "bg-yellow-400/10",
+    dot: "bg-yellow-400",
+    progress: 30,
+  },
+
+  chunking: {
+    label: "Chunking",
+    text: "text-orange-400",
+    bg: "bg-orange-400/10",
+    dot: "bg-orange-400",
+    progress: 50,
+  },
+
+  embedding: {
+    label: "Embedding",
+    text: "text-purple-400",
+    bg: "bg-purple-400/10",
+    dot: "bg-purple-400",
+    progress: 70,
+  },
+
+  storing: {
+    label: "Storing",
+    text: "text-cyan-400",
+    bg: "bg-cyan-400/10",
+    dot: "bg-cyan-400",
+    progress: 90,
   },
 
   ready: {
     label: "Ready",
-    text: "text-green-500",
-    dot: "bg-green-500",
-    bg: "bg-green-500/10",
+    text: "text-green-400",
+    bg: "bg-green-400/10",
+    dot: "bg-green-400",
+    progress: 100,
   },
 
   failed: {
     label: "Failed",
-    text: "text-red-500",
-    dot: "bg-red-500",
-    bg: "bg-red-500/10",
+    text: "text-red-400",
+    bg: "bg-red-400/10",
+    dot: "bg-red-400",
+    progress: 0,
   },
-
 };

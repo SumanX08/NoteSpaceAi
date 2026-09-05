@@ -142,35 +142,67 @@ export async function streamAnswer(
   chunks,
   onToken
 ) {
+  console.log("🤖 Creating OpenAI stream...");
+
   const stream =
     await openai.chat.completions.create({
       model: MODEL,
       temperature: 0,
       stream: true,
-      messages: buildAnswerMessages(
-        question,
-        chunks
-      ),
+
+      messages:
+        buildAnswerMessages(
+          question,
+          chunks
+        ),
     });
+
+  console.log(
+    "🤖 OpenAI stream created"
+  );
 
   let fullAnswer = "";
 
   for await (const part of stream) {
-    const token =
-      part.choices[0]?.delta?.content || "";
+    // DEBUG: inspect the actual OpenAI chunk
+    console.log(
+      "🤖 OPENAI CHUNK:",
+      JSON.stringify(part)
+    );
 
-    if (!token) continue;
+    const token =
+      part.choices?.[0]?.delta?.content;
+
+    if (!token) {
+      continue;
+    }
+
+    console.log(
+      "🤖 OPENAI TOKEN:",
+      JSON.stringify(token)
+    );
 
     fullAnswer += token;
 
     onToken(token);
   }
 
+  console.log(
+    "🤖 OpenAI stream finished"
+  );
+
+  console.log(
+    "🤖 Full answer:",
+    JSON.stringify(fullAnswer)
+  );
+
   return {
     answer: fullAnswer,
-    citations: buildCitations(
-      fullAnswer,
-      chunks
-    ),
+
+    citations:
+      buildCitations(
+        fullAnswer,
+        chunks
+      ),
   };
 }

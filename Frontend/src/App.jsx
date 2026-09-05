@@ -20,7 +20,7 @@ import { useChat } from "@/hooks/useChat";
 
 
 // ======================================================
-// AUTH WRAPPER
+// AUTH
 // ======================================================
 
 function App() {
@@ -40,7 +40,7 @@ function App() {
 
 
 // ======================================================
-// MAIN APPLICATION
+// NOTEBOOK APP
 // ======================================================
 
 function NotebookApp() {
@@ -55,14 +55,17 @@ function NotebookApp() {
     (state) => state.isStreaming
   );
 
-  // ----------------------------------------------------
+
+  // ====================================================
   // NOTEBOOK DATA
-  // ----------------------------------------------------
+  // ====================================================
 
   const {
     notebooks,
+    setNotebooks,
     loading,
     error,
+
     createNotebook,
     renameNotebook,
     deleteNotebook,
@@ -70,20 +73,19 @@ function NotebookApp() {
   } = useNotebookData();
 
 
-  // ----------------------------------------------------
+  // ====================================================
   // CHAT
-  // ----------------------------------------------------
+  // ====================================================
 
-  const {
-    sendMessage,
-  } = useChat({
+  const { sendMessage } = useChat({
     activeNotebookId,
+    setNotebooks,
   });
 
 
-  // ----------------------------------------------------
+  // ====================================================
   // LOADING
-  // ----------------------------------------------------
+  // ====================================================
 
   if (loading) {
     return (
@@ -94,9 +96,9 @@ function NotebookApp() {
   }
 
 
-  // ----------------------------------------------------
+  // ====================================================
   // ERROR
-  // ----------------------------------------------------
+  // ====================================================
 
   if (error) {
     return (
@@ -107,9 +109,9 @@ function NotebookApp() {
   }
 
 
-  // ----------------------------------------------------
-  // EMPTY STATE
-  // ----------------------------------------------------
+  // ====================================================
+  // EMPTY
+  // ====================================================
 
   if (!notebooks.length) {
     return (
@@ -120,20 +122,34 @@ function NotebookApp() {
   }
 
 
-  // ----------------------------------------------------
+  // ====================================================
   // ACTIVE NOTEBOOK
-  // ----------------------------------------------------
+  // ====================================================
 
   const activeNotebook =
     notebooks.find(
       (notebook) =>
-        notebook.id === activeNotebookId
+        notebook.id ===
+        activeNotebookId
     ) ?? notebooks[0];
 
+    const handleSourcesChange = (updatedSources) => {
+  setNotebooks((currentNotebooks) =>
+    currentNotebooks.map((notebook) =>
+      notebook.id === activeNotebook.id
+        ? {
+            ...notebook,
+            sources: updatedSources,
+          }
+        : notebook
+    )
+  );
+};
 
-  // ----------------------------------------------------
+
+  // ====================================================
   // ACTIVE VIEW
-  // ----------------------------------------------------
+  // ====================================================
 
   const renderView = () => {
     switch (activeTab) {
@@ -157,30 +173,23 @@ function NotebookApp() {
       case "sources":
         return (
           <SourceView
-            notebookId={
-              activeNotebook.id
-            }
-            sources={
-              activeNotebook.sources ?? []
-            }
-          />
+  notebookId={activeNotebook.id}
+  sources={activeNotebook.sources ?? []}
+  onSourcesChange={handleSourcesChange}
+/>
         );
 
       case "learn":
         return (
           <LearnView
-            notebook={
-              activeNotebook
-            }
+            notebook={activeNotebook}
           />
         );
 
       case "podcast":
         return (
           <PodcastView
-            notebook={
-              activeNotebook
-            }
+            notebook={activeNotebook}
           />
         );
 
@@ -190,26 +199,38 @@ function NotebookApp() {
   };
 
 
-  // ----------------------------------------------------
+  // ====================================================
   // UI
-  // ----------------------------------------------------
+  // ====================================================
 
   return (
     <div className="flex h-screen bg-background">
 
       <Sidebar
         notebooks={notebooks}
-        onCreateNotebook={createNotebook}
-        onRenameNotebook={renameNotebook}
-        onDeleteNotebook={deleteNotebook}
-        onTogglePin={togglePin}
+        onCreateNotebook={
+          createNotebook
+        }
+        onRenameNotebook={
+          renameNotebook
+        }
+        onDeleteNotebook={
+          deleteNotebook
+        }
+        onTogglePin={
+          togglePin
+        }
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
 
         <TopBar
-          title={activeNotebook.title}
-          emoji={activeNotebook.emoji}
+          title={
+            activeNotebook.title
+          }
+          emoji={
+            activeNotebook.emoji
+          }
           onAddSource={() =>
             setActiveTab("sources")
           }
@@ -230,7 +251,8 @@ function NotebookApp() {
           {rightPanelOpen && (
             <RightPanel
               sources={
-                activeNotebook.sources ?? []
+                activeNotebook.sources ??
+                []
               }
             />
           )}

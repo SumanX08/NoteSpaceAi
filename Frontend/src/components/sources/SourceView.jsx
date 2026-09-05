@@ -69,87 +69,95 @@ export function SourceView({
     }
   };
 
+  const loadSources = async () => {
+  try {
+    const res = await getSources(notebookId);
+
+    const fetchedSources =
+      res.data ?? [];
+
+    setSourceList(fetchedSources);
+
+    if (onSourcesChange) {
+      onSourcesChange(fetchedSources);
+    }
+
+    return fetchedSources;
+  } catch (error) {
+    console.error(
+      "Failed to load sources:",
+      error
+    );
+
+    return [];
+  }
+};
+
 
   // ==========================================
   // LOAD SOURCES
   // ==========================================
 
-  useEffect(() => {
-    if (!notebookId) return;
+  // ==========================================
+// LOAD + POLL SOURCES
+// ==========================================
 
-    let intervalId;
+useEffect(() => {
+  if (!notebookId) return;
 
+  let cancelled = false;
 
-    const loadSources = async () => {
-      try {
-        const res =
-          await getSources(notebookId);
-
-        const fetchedSources =
-          res.data ?? [];
-
-        setSourceList(fetchedSources);
-
-        // Sync sources with App.jsx
-        if (onSourcesChange) {
-          onSourcesChange(fetchedSources);
-        }
-
-        const hasProcessing =
-          fetchedSources.some(
-            (source) =>
-              [
-                "uploading",
-                "processing",
-              ].includes(source.status)
-          );
-
-
-        // Start polling only when
-        // sources are processing
-        if (
-          hasProcessing &&
-          !intervalId
-        ) {
-          intervalId = setInterval(
-            loadSources,
-            3000
-          );
-        }
-
-
-        // Stop polling when everything is ready
-        if (
-          !hasProcessing &&
-          intervalId
-        ) {
-          clearInterval(intervalId);
-
-          intervalId = null;
-        }
-
-      } catch (error) {
-        console.error(
-          "Failed to load sources:",
-          error
-        );
-      }
-    };
-
-
-    loadSources();
-
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-
-  }, [
-    notebookId,
-    onSourcesChange,
+  const processingStatuses = new Set([
+    "uploading",
+    "extracting",
+    "chunking",
+    "embedding",
+    "storing",
   ]);
+
+  
+
+  let intervalId;
+
+  const startPolling = async () => {
+    const initialSources = await loadSources();
+
+    if (cancelled) return;
+
+    const hasProcessing = initialSources.some(
+      (source) =>
+        processingStatuses.has(source.status)
+    );
+
+    if (!hasProcessing) return;
+
+    intervalId = setInterval(async () => {
+      const latestSources = await loadSources();
+
+      if (cancelled) return;
+
+      const stillProcessing = latestSources.some(
+        (source) =>
+          processingStatuses.has(source.status)
+      );
+
+      if (!stillProcessing) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }, 1000);
+  };
+
+  startPolling();
+
+  return () => {
+    cancelled = true;
+
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+  };
+}, [notebookId]);
 
 
   // ==========================================
@@ -309,28 +317,21 @@ export function SourceView({
         {pickerOpen && (
 
           <SourcePicker
-            notebookId={notebookId}
+  notebookId={notebookId}
+  setUploading={setUploading}
+  onClose={() => setPickerOpen(false)}
+  onPick={(updatedSources) => {
+    setPickerOpen(false);
 
-            setUploading={
-              setUploading
-            }
+    setSourceList(updatedSources);
 
-            setSourceList={
-              setSourceList
-            }
+    if (onSourcesChange) {
+      onSourcesChange(updatedSources);
+    }
 
-            onClose={() =>
-              setPickerOpen(false)
-            }
-
-            onPick={() => {
-              setPickerOpen(false);
-
-              setActiveTab(
-                "sources"
-              );
-            }}
-          />
+    setActiveTab("sources");
+  }}
+/>
 
         )}
 

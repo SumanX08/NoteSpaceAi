@@ -43,7 +43,7 @@ const sourceSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["uploading", "processing", "ready", "failed"],
+      enum: ["uploading", "extracting","chunking","embedding","storing", "ready", "failed"],
       default: "uploading",
       index: true,
     },

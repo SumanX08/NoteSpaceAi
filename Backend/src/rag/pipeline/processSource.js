@@ -1,4 +1,3 @@
-
 import Source from "../../models/source.model.js";
 
 import PipelineContext from "./pipeline.context.js";
@@ -17,7 +16,7 @@ export async function processSource(sourceId) {
   }
 
   await Source.findByIdAndUpdate(sourceId, {
-    status: "processing",
+    status: "extracting",
     error: "",
   });
 
@@ -26,12 +25,28 @@ export async function processSource(sourceId) {
   const startTime = Date.now();
 
   try {
+    // =========================
+    // EXTRACT
+    // =========================
+
+    await Source.findByIdAndUpdate(sourceId, {
+      status: "extracting",
+    });
+
     context = await extractStage(context);
 
     console.log(
       "AFTER EXTRACT:",
       context.extracted?.text?.length
     );
+
+    // =========================
+    // CHUNK
+    // =========================
+
+    await Source.findByIdAndUpdate(sourceId, {
+      status: "chunking",
+    });
 
     context = await chunkStage(context);
 
@@ -40,12 +55,28 @@ export async function processSource(sourceId) {
       context.chunks?.length
     );
 
+    // =========================
+    // EMBEDDING
+    // =========================
+
+    await Source.findByIdAndUpdate(sourceId, {
+      status: "embedding",
+    });
+
     context = await embedStage(context);
 
     console.log(
       "AFTER EMBED:",
       context.embeddedChunks?.length
     );
+
+    // =========================
+    // PERSIST / STORE
+    // =========================
+
+    await Source.findByIdAndUpdate(sourceId, {
+      status: "storing",
+    });
 
     context = await persistStage(context);
 
@@ -54,12 +85,23 @@ export async function processSource(sourceId) {
       context.savedChunks?.length
     );
 
+    // =========================
+    // FINALIZE
+    // =========================
+
     context.stats.processingTime =
       Date.now() - startTime;
 
     await finalizeStage(context);
 
-    console.log("SOURCE PROCESSING COMPLETE");
+    await Source.findByIdAndUpdate(sourceId, {
+  status: "ready",
+  error: "",
+});
+
+    console.log(
+      "SOURCE PROCESSING COMPLETE"
+    );
 
     return context;
 

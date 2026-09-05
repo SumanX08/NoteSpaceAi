@@ -31,13 +31,23 @@ export default function SourceCard({
     sourceIcon[source.type] || File;
 
 
+    const stage = statusMeta[source.status];
+
+
   const meta =
     statusMeta[source.status];
 
 
-  const processing =
-    source.status === "processing" ||
-    source.status === "uploading";
+ const processingStatuses = [
+  "uploading",
+  "extracting",
+  "chunking",
+  "embedding",
+  "storing",
+];
+
+const processing =
+  processingStatuses.includes(source.status);
 
 
   const handleDelete = () => {
@@ -133,53 +143,49 @@ export default function SourceCard({
 
         {processing ? (
 
-          <div className="space-y-1.5">
+  <div className="space-y-1.5">
 
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                text-[0.6875rem]
-              "
-            >
+    <div
+      className="
+        flex
+        items-center
+        justify-between
+        text-[0.6875rem]
+      "
+    >
 
-              <span
-                className={cn(
-                  "flex items-center gap-1.5 font-medium",
-                  meta.text
-                )}
-              >
+      <span
+        className={cn(
+          "flex items-center gap-1.5 font-medium",
+          meta?.text
+        )}
+      >
 
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    meta.dot
-                  )}
-                />
+        <span
+          className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            meta?.dot
+          )}
+        />
 
-                {meta.label}
+        {stage?.label || "Processing"}
 
-              </span>
+      </span>
 
+      <span className="text-muted-foreground-dim">
+        {stage?.progress || 0}%
+      </span>
 
-              <span
-                className="text-muted-foreground-dim"
-              >
-                Processing...
-              </span>
+    </div>
 
-            </div>
+    <Progress
+      value={stage?.progress || 0}
+      className="h-1"
+    />
 
+  </div>
 
-            <Progress
-              value={50}
-              className="h-1"
-            />
-
-          </div>
-
-        ) : (
+) : (
 
           <div
             className="

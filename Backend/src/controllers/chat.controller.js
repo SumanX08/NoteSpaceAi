@@ -4,8 +4,9 @@ import Chat from "../models/chat.model.js";
 import Message from "../models/message.model.js";
 
 import search from "../rag/retrieval/search.js";
-import streamAnswer from "../rag/retrieval/answer.js";
-
+import {
+  streamAnswer,
+} from "../rag/retrieval/answer.js";
 
 // =====================================
 // ASK QUESTION
@@ -165,6 +166,12 @@ export const askQuestion = asyncHandler(
         question,
         chunks,
         (token) => {
+
+          console.log(
+      "📤 SENDING TOKEN:",
+      JSON.stringify(token)
+    );
+
 
           sendEvent("token", {
             content: token,

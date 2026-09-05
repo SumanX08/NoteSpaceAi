@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/react";
 
+import api from "@/services/api";
+
 import {
   getNotebooks,
   createNotebook as createNotebookApi,
@@ -10,431 +12,289 @@ import {
 } from "@/services/notebook.service";
 
 import { getSources } from "@/services/source.service";
-import api from "@/services/api";
-
 import { useAppStore } from "@/store/appStore";
 
-
-// ======================================================
-// NOTEBOOK DATA HOOK
-// ======================================================
-
 export function useNotebookData() {
-  const {
-    getToken,
-    isLoaded,
-    isSignedIn,
-  } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   const [notebooks, setNotebooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const {
-    setActiveNotebookId,
-  } = useAppStore();
-
+  const setActiveNotebookId = useAppStore(
+    (state) => state.setActiveNotebookId
+  );
 
   // ====================================================
-  // CLERK / AXIOS AUTH
+  // AXIOS AUTH
   // ====================================================
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
-      return;
-    }
+    if (!isLoaded || !isSignedIn) return;
 
-    const interceptor =
-      api.interceptors.request.use(
-        async (config) => {
-          const token =
-            await getToken();
+    const interceptor = api.interceptors.request.use(
+      async (config) => {
+        const token = await getToken();
 
-          if (token) {
-            config.headers =
-              config.headers || {};
-
-            config.headers.Authorization =
-              `Bearer ${token}`;
-          }
-
-          return config;
+        if (token) {
+          config.headers = config.headers || {};
+          config.headers.Authorization = `Bearer ${token}`;
         }
-      );
+
+        return config;
+      }
+    );
 
     return () => {
-      api.interceptors.request.eject(
-        interceptor
-      );
+      api.interceptors.request.eject(interceptor);
     };
-  }, [
-    isLoaded,
-    isSignedIn,
-    getToken,
-  ]);
-
+  }, [isLoaded, isSignedIn, getToken]);
 
   // ====================================================
   // LOAD MESSAGES
   // ====================================================
 
-  const loadMessages = useCallback(
-    async (notebookId) => {
-      try {
-        const res = await api.get(
-          `/chat/${notebookId}/messages`
-        );
+  const loadMessages = useCallback(async (notebookId) => {
+    try {
+      const res = await api.get(
+        `/chat/${notebookId}/messages`
+      );
 
-        return (res.data ?? []).map(
-          (message) => ({
-            id: message._id,
-            role: message.role,
-            content: message.content,
-            citations:
-              message.citations ?? [],
-          })
-        );
-      } catch (error) {
-        console.error(
-          "Failed to load messages:",
-          error
-        );
-
-        return [];
-      }
-    },
-    []
-  );
-
+      return (res.data ?? []).map((message) => ({
+        id: message._id,
+        role: message.role,
+        content: message.content,
+        citations: message.citations ?? [],
+      }));
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+      return [];
+    }
+  }, []);
 
   // ====================================================
   // LOAD NOTEBOOKS
   // ====================================================
 
-  const loadNotebooks = useCallback(
-    async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadNotebooks = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const res =
-          await getNotebooks();
+      const res = await getNotebooks();
+      const notebookData = res.data ?? [];
 
-        const notebookData =
-          res.data ?? [];
-
-        if (!notebookData.length) {
-          setNotebooks([]);
-          return;
-        }
-
-        const notebooksWithData =
-          await Promise.all(
-            notebookData.map(
-              async (notebook) => {
-                const [
-                  messages,
-                  sourcesRes,
-                ] = await Promise.all([
-                  loadMessages(
-                    notebook._id
-                  ),
-                  getSources(
-                    notebook._id
-                  ),
-                ]);
-
-                return {
-                  ...notebook,
-
-                  id: notebook._id,
-
-                  isPinned:
-                    notebook.isPinned ??
-                    false,
-
-                  sources:
-                    sourcesRes.data ??
-                    [],
-
-                  messages,
-                };
-              }
-            )
-          );
-
-        const sortedNotebooks =
-          notebooksWithData.sort(
-            (a, b) => {
-              if (
-                a.isPinned ===
-                b.isPinned
-              ) {
-                return 0;
-              }
-
-              return a.isPinned
-                ? -1
-                : 1;
-            }
-          );
-
-        setNotebooks(
-          sortedNotebooks
-        );
-
-        setActiveNotebookId(
-          sortedNotebooks[0].id
-        );
-      } catch (err) {
-        console.error(
-          "Failed to load notebooks:",
-          err
-        );
-
-        setError(
-          err?.message ||
-          "Failed to load notebooks"
-        );
-      } finally {
-        setLoading(false);
+      if (!notebookData.length) {
+        setNotebooks([]);
+        return;
       }
-    },
-    [
-      loadMessages,
-      setActiveNotebookId,
-    ]
-  );
 
+      const notebooksWithData = await Promise.all(
+        notebookData.map(async (notebook) => {
+          const [messages, sourcesRes] = await Promise.all([
+            loadMessages(notebook._id),
+            getSources(notebook._id),
+          ]);
+
+          return {
+            ...notebook,
+            id: notebook._id,
+            isPinned: notebook.isPinned ?? false,
+            sources: sourcesRes.data ?? [],
+            messages,
+          };
+        })
+      );
+
+      const sortedNotebooks = notebooksWithData.sort(
+        (a, b) => Number(b.isPinned) - Number(a.isPinned)
+      );
+
+      setNotebooks(sortedNotebooks);
+
+      const currentActiveId =
+        useAppStore.getState().activeNotebookId;
+
+      const activeStillExists = sortedNotebooks.some(
+        (notebook) => notebook.id === currentActiveId
+      );
+
+      if (!activeStillExists) {
+        setActiveNotebookId(sortedNotebooks[0].id);
+      }
+    } catch (err) {
+      console.error("Failed to load notebooks:", err);
+
+      setError(
+        err?.message || "Failed to load notebooks"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [loadMessages, setActiveNotebookId]);
 
   // ====================================================
   // INITIAL LOAD
   // ====================================================
 
   useEffect(() => {
-    if (
-      !isLoaded ||
-      !isSignedIn
-    ) {
-      return;
-    }
+    if (!isLoaded || !isSignedIn) return;
 
     loadNotebooks();
-  }, [
-    isLoaded,
-    isSignedIn,
-    loadNotebooks,
-  ]);
-
+  }, [isLoaded, isSignedIn, loadNotebooks]);
 
   // ====================================================
-  // CREATE NOTEBOOK
+  // CREATE
   // ====================================================
 
-  const createNotebook =
-    useCallback(
-      async () => {
-        try {
-          const res =
-            await createNotebookApi({
-              title:
-                "Untitled Notebook",
-              emoji: "📒",
-            });
+  const createNotebook = useCallback(async () => {
+    try {
+      const res = await createNotebookApi({
+        title: "Untitled Notebook",
+        emoji: "📒",
+      });
 
-          const notebook = {
-            ...res.data,
+      const notebook = {
+        ...res.data,
+        id: res.data._id,
+        sources: [],
+        messages: [],
+        isPinned: false,
+      };
 
-            id: res.data._id,
+      setNotebooks((prev) => [
+        notebook,
+        ...prev,
+      ]);
 
-            sources: [],
-            messages: [],
+      setActiveNotebookId(notebook.id);
+    } catch (error) {
+      console.error(
+        "Failed to create notebook:",
+        error
+      );
+    }
+  }, [setActiveNotebookId]);
 
-            isPinned: false,
-          };
+  // ====================================================
+  // RENAME
+  // ====================================================
 
-          setNotebooks(
-            (prev) => [
-              notebook,
-              ...prev,
-            ]
+  const renameNotebook = useCallback(
+    async (id, title) => {
+      let previous;
+
+      setNotebooks((current) => {
+        previous = current;
+
+        return current.map((notebook) =>
+          notebook.id === id
+            ? { ...notebook, title }
+            : notebook
+        );
+      });
+
+      try {
+        await updateNotebook(id, { title });
+      } catch (error) {
+        console.error(
+          "Failed to rename notebook:",
+          error
+        );
+
+        if (previous) {
+          setNotebooks(previous);
+        }
+      }
+    },
+    []
+  );
+
+  // ====================================================
+  // DELETE
+  // ====================================================
+
+  const deleteNotebook = useCallback(
+    async (id) => {
+      let previous = [];
+
+      setNotebooks((current) => {
+        previous = current;
+
+        return current.filter(
+          (notebook) => notebook.id !== id
+        );
+      });
+
+      try {
+        await deleteNotebookApi(id);
+
+        if (
+          useAppStore.getState().activeNotebookId === id
+        ) {
+          const remaining = previous.filter(
+            (notebook) => notebook.id !== id
           );
 
           setActiveNotebookId(
-            notebook.id
-          );
-        } catch (error) {
-          console.error(
-            "Failed to create notebook:",
-            error
+            remaining[0]?.id ?? null
           );
         }
-      },
-      [setActiveNotebookId]
-    );
-
-
-  // ====================================================
-  // RENAME NOTEBOOK
-  // ====================================================
-
-  const renameNotebook =
-    useCallback(
-      async (id, title) => {
-        const previous =
-          notebooks;
-
-        setNotebooks(
-          (prev) =>
-            prev.map(
-              (nb) =>
-                nb.id === id
-                  ? {
-                      ...nb,
-                      title,
-                    }
-                  : nb
-            )
+      } catch (error) {
+        console.error(
+          "Failed to delete notebook:",
+          error
         );
 
-        try {
-          await updateNotebook(
-            id,
-            { title }
-          );
-        } catch (error) {
-          console.error(
-            "Failed to rename notebook:",
-            error
-          );
-
-          setNotebooks(
-            previous
-          );
-        }
-      },
-      [notebooks]
-    );
-
+        setNotebooks(previous);
+      }
+    },
+    [setActiveNotebookId]
+  );
 
   // ====================================================
-  // DELETE NOTEBOOK
+  // PIN
   // ====================================================
 
-  const deleteNotebook =
-    useCallback(
-      async (id) => {
-        const previous =
-          notebooks;
+  const togglePin = useCallback(async (id) => {
+    let previous;
 
-        setNotebooks(
-          (prev) =>
-            prev.filter(
-              (nb) =>
-                nb.id !== id
-            )
-        );
+    setNotebooks((current) => {
+      previous = current;
 
-        try {
-          await deleteNotebookApi(
-            id
-          );
-
-          if (
-            useAppStore.getState()
-              .activeNotebookId === id
-          ) {
-            const remaining =
-              previous.filter(
-                (nb) =>
-                  nb.id !== id
-              );
-
-            if (remaining.length) {
-              setActiveNotebookId(
-                remaining[0].id
-              );
-            }
-          }
-        } catch (error) {
-          console.error(
-            "Failed to delete notebook:",
-            error
-          );
-
-          setNotebooks(
-            previous
-          );
-        }
-      },
-      [
-        notebooks,
-        setActiveNotebookId,
-      ]
-    );
-
-
-  // ====================================================
-  // PIN NOTEBOOK
-  // ====================================================
-
-  const togglePin =
-    useCallback(
-      async (id) => {
-        const previous =
-          notebooks;
-
-        const updated =
-          notebooks
-            .map((nb) =>
-              nb.id === id
-                ? {
-                    ...nb,
-                    isPinned:
-                      !nb.isPinned,
-                  }
-                : nb
-            )
-            .sort((a, b) => {
-              if (
-                a.isPinned ===
-                b.isPinned
-              ) {
-                return 0;
+      return current
+        .map((notebook) =>
+          notebook.id === id
+            ? {
+                ...notebook,
+                isPinned: !notebook.isPinned,
               }
-
-              return a.isPinned
-                ? -1
-                : 1;
-            });
-
-        setNotebooks(
-          updated
+            : notebook
+        )
+        .sort(
+          (a, b) =>
+            Number(b.isPinned) -
+            Number(a.isPinned)
         );
+    });
 
-        try {
-          await togglePinNotebook(
-            id
-          );
-        } catch (error) {
-          console.error(
-            "Failed to pin notebook:",
-            error
-          );
+    try {
+      await togglePinNotebook(id);
+    } catch (error) {
+      console.error(
+        "Failed to pin notebook:",
+        error
+      );
 
-          setNotebooks(
-            previous
-          );
-        }
-      },
-      [notebooks]
-    );
-
+      if (previous) {
+        setNotebooks(previous);
+      }
+    }
+  }, []);
 
   return {
     notebooks,
     setNotebooks,
-
     loading,
     error,
 
@@ -443,7 +303,6 @@ export function useNotebookData() {
     deleteNotebook,
     togglePin,
 
-    reloadNotebooks:
-      loadNotebooks,
+    reloadNotebooks: loadNotebooks,
   };
 }
