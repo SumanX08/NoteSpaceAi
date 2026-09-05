@@ -11,9 +11,7 @@ import {
   uploadDocumentToCloudinary,
 } from "../services/cloudinary.service.js";
 
-// =====================================================
-// UPLOAD SOURCE
-// =====================================================
+
 
 export const uploadSource = asyncHandler(async (req, res) => {
   const file = req.file;
