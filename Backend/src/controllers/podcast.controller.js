@@ -1,103 +1,67 @@
-import asyncHandler from "../middleware/asyncHandler.js";
-
 import Notebook from "../models/notebook.model.js";
 import Podcast from "../models/podcast.model.js";
+import { inngest } from "../inngest/index.js";
 
-import {
-  getNotebookChunks,
-  generatePodcastScript,
-  generatePodcastAudio,
-} from "../services/podcast.service.js";
+const VALID_STYLES = [
+  "teacher",
+  "conversation",
+  "interview",
+  "revision",
+];
 
-import {
-  uploadAudioToCloudinary,
-} from "../services/cloudinary.service.js";
+const VALID_VOICES = [
+  "male",
+  "female",
+  "mixed",
+];
 
-export const generatePodcast =
-  asyncHandler(async (req, res) => {
-    console.log(
-      "\n========== PODCAST GENERATION START =========="
-    );
+const VALID_DURATIONS = [
+  5,
+  10,
+  20,
+];
+
+export async function generatePodcast(
+  req,
+  res,
+  next
+) {
+  try {
+    const { notebookId } =
+      req.params;
 
     const {
-      notebookId,
-    } = req.params;
-
-    const {
-      style = "teacher",
-      voice = "female",
-      duration = 10,
+      style,
+      voice,
+      duration,
     } = req.body;
 
     const userId =
       req.userId;
 
-    console.log(
-      "USER:",
-      userId
-    );
-
-    console.log(
-      "NOTEBOOK:",
-      notebookId
-    );
-
-    console.log(
-      "STYLE:",
-      style
-    );
-
-    console.log(
-      "VOICE:",
-      voice
-    );
-
-    console.log(
-      "DURATION:",
-      duration
-    );
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const validStyles = [
-      "teacher",
-      "conversation",
-      "interview",
-      "revision",
-    ];
-
-    const validVoices = [
-      "male",
-      "female",
-      "mixed",
-    ];
-
-    const validDurations = [
-      5,
-      10,
-      20,
-    ];
+    /*
+     * ---------------------------------------------
+     * Validation
+     * ---------------------------------------------
+     */
 
     if (
-      !validStyles.includes(style)
+      !VALID_STYLES.includes(style)
     ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid podcast style.",
+        message:
+          "Invalid podcast style.",
       });
     }
 
     if (
-      !validVoices.includes(voice)
+      !VALID_VOICES.includes(voice)
     ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid podcast voice.",
+        message:
+          "Invalid podcast voice.",
       });
     }
 
@@ -105,19 +69,22 @@ export const generatePodcast =
       Number(duration);
 
     if (
-      !validDurations.includes(
+      !VALID_DURATIONS.includes(
         numericDuration
       )
     ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid podcast duration.",
+        message:
+          "Invalid podcast duration.",
       });
     }
 
-    // ------------------------------------------------
-    // Verify notebook ownership
-    // ------------------------------------------------
+    /*
+     * ---------------------------------------------
+     * Verify notebook ownership
+     * ---------------------------------------------
+     */
 
     const notebook =
       await Notebook.findOne({
@@ -133,9 +100,11 @@ export const generatePodcast =
       });
     }
 
-    // ------------------------------------------------
-    // Create podcast record
-    // ------------------------------------------------
+    /*
+     * ---------------------------------------------
+     * Create podcast record
+     * ---------------------------------------------
+     */
 
     const podcast =
       await Podcast.create({
@@ -156,193 +125,102 @@ export const generatePodcast =
 
         status:
           "generating",
+
+        script: "",
+
+        audioUrl: "",
+
+        audioPublicId: "",
+
+        error: "",
       });
 
-    try {
-      // ----------------------------------------------
-      // Get complete notebook content
-      // ----------------------------------------------
+    /*
+     * ---------------------------------------------
+     * Trigger background generation
+     * ---------------------------------------------
+     */
 
-      console.log(
-        "📚 Loading notebook chunks..."
-      );
+    await inngest.send({
+      name: "podcast/generate",
 
-      const chunks =
-        await getNotebookChunks(
-          notebookId
-        );
+      data: {
+        podcastId:
+          podcast._id.toString(),
 
-      console.log(
-        "📚 Chunks:",
-        chunks.length
-      );
+        notebookId:
+          notebook._id.toString(),
 
-      if (!chunks.length) {
-        throw new Error(
-          "This notebook has no processed source content yet."
-        );
-      }
+        userId,
 
-      // ----------------------------------------------
-      // Generate script
-      // ----------------------------------------------
+        style,
 
-      console.log(
-        "🧠 Generating podcast script..."
-      );
+        voice,
 
-      const script =
-        await generatePodcastScript({
-          notebook,
-          chunks,
-          style,
-          voice,
-          duration:
-            numericDuration,
-        });
+        duration:
+          numericDuration,
+      },
+    });
 
-      console.log(
-        "🧠 Script generated:",
-        script.length,
-        "characters"
-      );
+    /*
+     * ---------------------------------------------
+     * Return immediately
+     * ---------------------------------------------
+     */
 
-      podcast.script =
-        script;
+    return res.status(202).json({
+      success: true,
 
-      await podcast.save();
+      message:
+        "Podcast generation started.",
 
-      // ----------------------------------------------
-      // Generate audio
-      // ----------------------------------------------
+      data: {
+        id:
+          podcast._id,
 
-      console.log(
-        "🎙️ Generating podcast audio..."
-      );
+        title:
+          podcast.title,
 
-      const audioBuffer =
-        await generatePodcastAudio({
-          script,
-          voice,
-          style
-        });
+        style:
+          podcast.style,
 
-      console.log(
-        "🎙️ Audio generated:",
-        audioBuffer.length,
-        "bytes"
-      );
+        voice:
+          podcast.voice,
 
-      // ----------------------------------------------
-      // Upload audio
-      // ----------------------------------------------
+        duration:
+          podcast.duration,
 
-      console.log(
-        "☁️ Uploading audio to Cloudinary..."
-      );
+        script: "",
 
-      const upload =
-        await uploadAudioToCloudinary(
-          audioBuffer,
-          `podcast-${podcast._id}.mp3`
-        );
+        audioUrl: "",
 
-      console.log(
-        "☁️ Audio uploaded:",
-        upload.secureUrl
-      );
+        status:
+          "generating",
 
-      // ----------------------------------------------
-      // Update podcast
-      // ----------------------------------------------
+        createdAt:
+          podcast.createdAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
-      podcast.audioUrl =
-        upload.secureUrl;
-
-      podcast.audioPublicId =
-        upload.publicId;
-
-      podcast.status =
-        "ready";
-
-      podcast.error =
-        "";
-
-      await podcast.save();
-
-      console.log(
-        "========== PODCAST GENERATION COMPLETE ==========\n"
-      );
-
-      return res.status(201).json({
-        success: true,
-
-        message:
-          "Podcast generated successfully.",
-
-        data: {
-          id:
-            podcast._id,
-
-          title:
-            podcast.title,
-
-          style:
-            podcast.style,
-
-          voice:
-            podcast.voice,
-
-          duration:
-            podcast.duration,
-
-          script:
-            podcast.script,
-
-          audioUrl:
-            podcast.audioUrl,
-
-          status:
-            podcast.status,
-
-          createdAt:
-            podcast.createdAt,
-        },
-      });
-    } catch (error) {
-      console.error(
-        "❌ Podcast generation failed:",
-        error
-      );
-
-      podcast.status =
-        "failed";
-
-      podcast.error =
-        error.message ||
-        "Podcast generation failed.";
-
-      await podcast.save();
-
-      throw error;
-    }
-  });
-
-export const getPodcasts =
-  asyncHandler(async (req, res) => {
-    const {
-      notebookId,
-    } = req.params;
+export async function getPodcasts(
+  req,
+  res,
+  next
+) {
+  try {
+    const { notebookId } =
+      req.params;
 
     const userId =
       req.userId;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
+    /*
+     * Verify notebook ownership.
+     */
 
     const notebook =
       await Notebook.findOne({
@@ -372,4 +250,7 @@ export const getPodcasts =
       success: true,
       data: podcasts,
     });
-  });
+  } catch (error) {
+    next(error);
+  }
+}

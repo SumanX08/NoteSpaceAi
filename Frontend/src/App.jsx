@@ -10,8 +10,7 @@ import { RightPanel } from "./components/right-panel";
 import { ChatView } from "./components/chat/ChatView";
 import { SourceView } from "./components/sources/SourceView";
 import { LearnView } from "./components/learn-view";
-import { PodcastView } from "./components/podcast-view";
-
+import PodcastView from "./components/podcast/PodcastView";
 import { useAppStore } from "@/store/appStore";
 import { useChatStore } from "@/store/chatStore";
 
