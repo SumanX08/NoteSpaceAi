@@ -40,6 +40,7 @@ export default function PodcastGenerator({
     submitting ||
     hasGenerating;
 
+    
   const handleGenerate =
     async () => {
       await onGenerate({

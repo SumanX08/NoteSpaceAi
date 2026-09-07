@@ -10,7 +10,7 @@ export const createNotebook = asyncHandler(async (req, res) => {
   const { title, emoji, description } = req.body;
 
   const notebook = await Notebook.create({
-    title,
+    title:"Untitled Workspace",
     emoji,
     description,
 

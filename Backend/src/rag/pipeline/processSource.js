@@ -7,6 +7,7 @@ import chunkStage from "./chunk.stage.js";
 import embedStage from "./embed.stage.js";
 import persistStage from "./persist.stage.js";
 import finalizeStage from "./final.stage.js";
+import generateTitleStage from "./generateTitle.stage.js";
 
 export async function processSource(sourceId) {
   const source = await Source.findById(sourceId);
@@ -40,6 +41,9 @@ export async function processSource(sourceId) {
       context.extracted?.text?.length
     );
 
+    await generateTitleStage(context);
+
+    
     // =========================
     // CHUNK
     // =========================
