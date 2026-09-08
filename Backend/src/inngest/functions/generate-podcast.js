@@ -39,11 +39,7 @@ export const generatePodcast =
       } = event.data;
 
       try {
-        /*
-         * ============================================
-         * 1. VERIFY NOTEBOOK
-         * ============================================
-         */
+       
 
         const notebook =
           await step.run(
