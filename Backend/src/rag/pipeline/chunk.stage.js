@@ -1,7 +1,16 @@
 import chunkText from "../chunking/recursive.chunker.js";
+import Source from "../../models/source.model.js";
 
 export default async function chunkStage(context) {
   console.log("CHUNK STAGE START");
+
+  await Source.findByIdAndUpdate(
+    context.source._id,
+    {
+      status: "chunking",
+      error: "",
+    }
+  );
 
   const extracted = context.extracted;
 
@@ -40,7 +49,6 @@ export default async function chunkStage(context) {
 
           metadata: {
             ...chunk.metadata,
-
             page: pageData.page,
           },
         });
@@ -50,7 +58,6 @@ export default async function chunkStage(context) {
     }
 
     context.chunks = allChunks;
-
   }
 
   // =====================================
@@ -125,7 +132,6 @@ export default async function chunkStage(context) {
     }
 
     context.chunks = allChunks;
-
   }
 
   // =====================================

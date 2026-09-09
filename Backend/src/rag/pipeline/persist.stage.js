@@ -1,13 +1,21 @@
 import { v4 as uuid } from "uuid";
 
 import Chunk from "../../models/chunk.model.js";
+import Source from "../../models/source.model.js";
 import vectorRepository from "../../vectorstore/vector.repository.js";
 
 export default async function persistStage(context) {
-
   console.log(
     "PERSIST STAGE - embedded chunks:",
     context.embeddedChunks?.length
+  );
+
+  await Source.findByIdAndUpdate(
+    context.source._id,
+    {
+      status: "storing",
+      error: "",
+    }
   );
 
   if (!context.embeddedChunks?.length) {
@@ -17,52 +25,54 @@ export default async function persistStage(context) {
   }
 
   const chunksToSave =
-    context.embeddedChunks.map((chunk, index) => {
+    context.embeddedChunks.map(
+      (chunk, index) => {
+        const vectorId = uuid();
 
-      const vectorId = uuid();
+        return {
+          notebook:
+            context.source.notebookId,
 
-      return {
-        notebook: context.source.notebookId,
+          source:
+            context.source._id,
 
-        source: context.source._id,
+          chunkIndex:
+            chunk.chunkIndex ?? index,
 
-        chunkIndex:
-          chunk.chunkIndex ?? index,
+          text:
+            chunk.text,
 
-        text: chunk.text,
+          vectorId,
 
-        vectorId,
+          metadata:
+            chunk.metadata || {},
 
-        metadata:
-          chunk.metadata || {},
-
-        embedding:
-          chunk.embedding,
-      };
-    });
-
+          embedding:
+            chunk.embedding,
+        };
+      }
+    );
 
   console.log(
     "Saving chunks:",
     chunksToSave.length
   );
 
-
   // Save vectors FIRST
   await vectorRepository.upsertChunks(
     chunksToSave
   );
 
-
   // Remove embeddings before MongoDB
   const mongoChunks =
     chunksToSave.map(
-      ({ embedding, ...chunk }) => chunk
+      ({ embedding, ...chunk }) =>
+        chunk
     );
 
-
-  await Chunk.insertMany(mongoChunks);
-
+  await Chunk.insertMany(
+    mongoChunks
+  );
 
   context.savedChunks =
     mongoChunks;

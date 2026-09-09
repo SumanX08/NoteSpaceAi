@@ -2,10 +2,12 @@ import {
   File,
   ExternalLink,
   Trash2,
+  Check,
+  LoaderCircle,
+  X,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Progress } from "@/components/ui/progress";
 
 import { useAppStore } from "@/store/appStore";
 
@@ -16,7 +18,6 @@ import {
   statusMeta,
 } from "./source.constants";
 
-
 export default function SourceCard({
   source,
   onDelete,
@@ -26,50 +27,51 @@ export default function SourceCard({
     setPreviewSource,
   } = useAppStore();
 
-
   const Icon =
     sourceIcon[source.type] || File;
 
+  const meta = statusMeta[source.status];
 
-    const stage = statusMeta[source.status];
+  const processingStatuses = [
+    "uploading",
+    "extracting",
+    "chunking",
+    "embedding",
+    "storing",
+  ];
 
-
-  const meta =
-    statusMeta[source.status];
-
-
- const processingStatuses = [
-  "uploading",
-  "extracting",
-  "chunking",
-  "embedding",
-  "storing",
-];
-
-const processing =
-  processingStatuses.includes(source.status);
-
+  const processing =
+    processingStatuses.includes(source.status);
 
   const handleDelete = () => {
-    const confirmed =
-      window.confirm(
-        `Delete "${source.title}"?`
-      );
+    const confirmed = window.confirm(
+      `Delete "${source.title}"?`
+    );
 
     if (!confirmed) return;
 
     onDelete(source._id);
   };
 
-
   return (
     <div
-      className="group rounded-2xl border border-border bg-card/40 p-4 transition-all hover:border-border-strong hover:bg-card/70"
+      className="
+        group
+        rounded-2xl
+        border
+        border-border
+        bg-card/40
+        p-4
+        transition-all
+        hover:border-border-strong
+        hover:bg-card/70
+      "
     >
-
       {/* TOP */}
 
       <div className="flex items-start gap-3">
+
+        {/* SOURCE ICON */}
 
         <div
           className={cn(
@@ -80,27 +82,36 @@ const processing =
           <Icon className="h-5 w-5" />
         </div>
 
+        {/* SOURCE INFO */}
 
         <div className="min-w-0 flex-1">
 
           <h3
-            className="truncate text-[0.875rem] font-medium leading-snug"
+            className="
+              truncate
+              text-[0.875rem]
+              font-medium
+              leading-snug
+            "
           >
             {source.title}
           </h3>
 
-
           <div
-            className="mt-1 flex items-center gap-2 text-[0.6875rem] text-muted-foreground"
+            className="
+              mt-1
+              flex
+              items-center
+              gap-2
+              text-[0.6875rem]
+              text-muted-foreground
+            "
           >
-
             <span>
               {sourceTypeLabel[source.type]}
             </span>
 
-            <span>
-              ·
-            </span>
+            <span>·</span>
 
             <span>
               {source.createdAt
@@ -109,11 +120,9 @@ const processing =
                   ).toLocaleDateString()
                 : "Recently added"}
             </span>
-
           </div>
 
         </div>
-
 
         {/* DELETE BUTTON */}
 
@@ -121,7 +130,9 @@ const processing =
           onClick={handleDelete}
           title="Delete source"
           className="
-            flex h-8 w-8
+            flex
+            h-8
+            w-8
             items-center
             justify-center
             rounded-md
@@ -136,56 +147,63 @@ const processing =
 
       </div>
 
-
       {/* BOTTOM */}
 
       <div className="mt-3.5">
 
+        {/* PROCESSING */}
+
         {processing ? (
 
-  <div className="space-y-1.5">
+          <div
+            className="
+              flex
+              items-center
+              gap-2
+              text-[0.6875rem]
+              font-medium
+            "
+          >
+            <LoaderCircle
+              className={cn(
+                "h-3.5 w-3.5 animate-spin",
+                meta?.text || "text-primary"
+              )}
+            />
 
-    <div
-      className="
-        flex
-        items-center
-        justify-between
-        text-[0.6875rem]
-      "
-    >
+            <span
+              className={cn(
+                meta?.text || "text-primary"
+              )}
+            >
+              {meta?.label || "Processing..."}
+            </span>
+          </div>
 
-      <span
-        className={cn(
-          "flex items-center gap-1.5 font-medium",
-          meta?.text
-        )}
-      >
+        ) : source.status === "failed" ? (
 
-        <span
-          className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            meta?.dot
-          )}
-        />
+          /* FAILED */
 
-        {stage?.label || "Processing"}
+          <div
+            className="
+              flex
+              items-center
+              gap-2
+              text-[0.6875rem]
+              font-medium
+              text-destructive
+            "
+          >
+            <X className="h-3.5 w-3.5" />
 
-      </span>
+            <span>
+              {meta?.label || "Processing failed"}
+            </span>
+          </div>
 
-      <span className="text-muted-foreground-dim">
-        {stage?.progress || 0}%
-      </span>
+        ) : (
 
-    </div>
-
-    <Progress
-      value={stage?.progress || 0}
-      className="h-1"
-    />
-
-  </div>
-
-) : (
+          /* READY */
 
           <div
             className="
@@ -198,41 +216,32 @@ const processing =
             <span
               className={cn(
                 `
-                inline-flex
-                items-center
-                gap-1.5
-                rounded-full
-                px-2
-                py-0.5
-                text-[0.6875rem]
-                font-medium
+                  inline-flex
+                  items-center
+                  gap-1.5
+                  rounded-full
+                  px-2
+                  py-0.5
+                  text-[0.6875rem]
+                  font-medium
                 `,
-                meta.bg,
-                meta.text
+                meta?.bg,
+                meta?.text
               )}
             >
 
-              <span
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  meta.dot
-                )}
-              />
+              <Check className="h-3 w-3" />
 
-              {meta.label}
+              {meta?.label || "Ready"}
 
             </span>
 
+            {/* PREVIEW */}
 
             <button
               onClick={() => {
-
                 setPreviewSource(source);
-
-                setPanelMode(
-                  "preview"
-                );
-
+                setPanelMode("preview");
               }}
               className="
                 flex
@@ -245,13 +254,9 @@ const processing =
                 hover:text-foreground
               "
             >
-
               Preview
 
-              <ExternalLink
-                className="h-3 w-3"
-              />
-
+              <ExternalLink className="h-3 w-3" />
             </button>
 
           </div>

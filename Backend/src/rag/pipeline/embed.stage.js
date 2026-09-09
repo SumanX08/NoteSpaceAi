@@ -1,9 +1,18 @@
 import { generateEmbeddings } from "../embeddings/openai.embeddings.js";
+import Source from "../../models/source.model.js";
 
 export default async function embedStage(context) {
   console.log(
     "EMBED STAGE INPUT:",
     context.chunks?.length
+  );
+
+  await Source.findByIdAndUpdate(
+    context.source._id,
+    {
+      status: "embedding",
+      error: "",
+    }
   );
 
   if (!context.chunks?.length) {
@@ -12,9 +21,10 @@ export default async function embedStage(context) {
     );
   }
 
-  const texts = context.chunks.map(
-    (chunk) => chunk.text
-  );
+  const texts =
+    context.chunks.map(
+      (chunk) => chunk.text
+    );
 
   const embeddings =
     await generateEmbeddings(texts);
@@ -26,7 +36,8 @@ export default async function embedStage(context) {
 
   if (
     !embeddings ||
-    embeddings.length !== context.chunks.length
+    embeddings.length !==
+      context.chunks.length
   ) {
     throw new Error(
       "Embedding count does not match chunk count."
@@ -34,10 +45,13 @@ export default async function embedStage(context) {
   }
 
   context.embeddedChunks =
-    context.chunks.map((chunk, index) => ({
-      ...chunk,
-      embedding: embeddings[index],
-    }));
+    context.chunks.map(
+      (chunk, index) => ({
+        ...chunk,
+        embedding:
+          embeddings[index],
+      })
+    );
 
   console.log(
     "EMBED STAGE OUTPUT:",

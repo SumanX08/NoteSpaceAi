@@ -109,6 +109,7 @@ useEffect(() => {
 
   const processingStatuses = new Set([
     "uploading",
+    "processing",
     "extracting",
     "chunking",
     "embedding",

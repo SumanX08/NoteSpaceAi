@@ -20,18 +20,21 @@ export const processSource = inngest.createFunction(
   },
 
   async ({ event, step }) => {
-    console.log("========== INNGEST EVENT ==========");
-    console.log(JSON.stringify(event, null, 2));
+    console.log(
+      "========== INNGEST EVENT =========="
+    );
 
-    const sourceId = event.data?.sourceId;
+    const sourceId =
+      event.data?.sourceId;
 
-    console.log("Received sourceId:", sourceId);
+    console.log(
+      "Received sourceId:",
+      sourceId
+    );
 
     if (!sourceId) {
       throw new Error(
-        `sourceId missing from event. Event data: ${JSON.stringify(
-          event.data
-        )}`
+        "sourceId missing from event"
       );
     }
 
@@ -39,10 +42,11 @@ export const processSource = inngest.createFunction(
     // EXTRACT
     // =================================
 
-    const context = await step.run(
+    const extracted = await step.run(
       "extract-source",
       async () => {
-        const source = await Source.findById(sourceId);
+        const source =
+          await Source.findById(sourceId);
 
         if (!source) {
           throw new Error(
@@ -50,33 +54,53 @@ export const processSource = inngest.createFunction(
           );
         }
 
-        await Source.findByIdAndUpdate(sourceId, {
-          status: "extracting",
-          error: "",
-        });
+        await Source.findByIdAndUpdate(
+          sourceId,
+          {
+            status: "extracting",
+            error: "",
+          }
+        );
 
-        const pipelineContext =
+        const context =
           new PipelineContext(source);
 
-        await extractStage(pipelineContext);
+        await extractStage(context);
 
         console.log(
           "AFTER EXTRACT:",
-          pipelineContext.extracted?.text?.length
+          context.extracted?.text?.length
         );
 
-        return pipelineContext;
+        return context.extracted;
       }
     );
 
     // =================================
-    // GENERATE WORKSPACE TITLE
+    // GENERATE TITLE
     // =================================
 
     await step.run(
       "generate-workspace-title",
       async () => {
-        await generateTitleStage(context);
+        const source =
+          await Source.findById(sourceId);
+
+        if (!source) {
+          throw new Error(
+            `Source not found: ${sourceId}`
+          );
+        }
+
+        const context =
+          new PipelineContext(source);
+
+        context.extracted =
+          extracted;
+
+        await generateTitleStage(
+          context
+        );
 
         return {
           success: true,
@@ -88,12 +112,30 @@ export const processSource = inngest.createFunction(
     // CHUNK
     // =================================
 
-    await step.run(
+    const chunks = await step.run(
       "chunk-source",
       async () => {
-        await Source.findByIdAndUpdate(sourceId, {
-          status: "chunking",
-        });
+        const source =
+          await Source.findById(sourceId);
+
+        if (!source) {
+          throw new Error(
+            `Source not found: ${sourceId}`
+          );
+        }
+
+        await Source.findByIdAndUpdate(
+          sourceId,
+          {
+            status: "chunking",
+          }
+        );
+
+        const context =
+          new PipelineContext(source);
+
+        context.extracted =
+          extracted;
 
         await chunkStage(context);
 
@@ -102,10 +144,7 @@ export const processSource = inngest.createFunction(
           context.chunks?.length
         );
 
-        return {
-          success: true,
-          chunks: context.chunks?.length || 0,
-        };
+        return context.chunks;
       }
     );
 
@@ -113,25 +152,44 @@ export const processSource = inngest.createFunction(
     // EMBEDDING
     // =================================
 
-    await step.run(
-      "embed-source",
-      async () => {
-        await Source.findByIdAndUpdate(sourceId, {
-          status: "embedding",
-        });
+    const embeddedChunks =
+      await step.run(
+        "embed-source",
+        async () => {
+          const source =
+            await Source.findById(
+              sourceId
+            );
 
-        await embedStage(context);
+          if (!source) {
+            throw new Error(
+              `Source not found: ${sourceId}`
+            );
+          }
 
-        console.log(
-          "AFTER EMBED:",
-          context.embeddedChunks?.length
-        );
+          await Source.findByIdAndUpdate(
+            sourceId,
+            {
+              status: "embedding",
+            }
+          );
 
-        return {
-          success: true,
-        };
-      }
-    );
+          const context =
+            new PipelineContext(source);
+
+          context.chunks =
+            chunks;
+
+          await embedStage(context);
+
+          console.log(
+            "AFTER EMBED:",
+            context.embeddedChunks?.length
+          );
+
+          return context.embeddedChunks;
+        }
+      );
 
     // =================================
     // PERSIST
@@ -140,9 +198,29 @@ export const processSource = inngest.createFunction(
     await step.run(
       "persist-source",
       async () => {
-        await Source.findByIdAndUpdate(sourceId, {
-          status: "storing",
-        });
+        const source =
+          await Source.findById(
+            sourceId
+          );
+
+        if (!source) {
+          throw new Error(
+            `Source not found: ${sourceId}`
+          );
+        }
+
+        await Source.findByIdAndUpdate(
+          sourceId,
+          {
+            status: "storing",
+          }
+        );
+
+        const context =
+          new PipelineContext(source);
+
+        context.embeddedChunks =
+          embeddedChunks;
 
         await persistStage(context);
 
@@ -158,16 +236,19 @@ export const processSource = inngest.createFunction(
     );
 
     // =================================
-    // FINALIZE
+    // READY
     // =================================
 
     await step.run(
       "finalize-source",
       async () => {
-        await Source.findByIdAndUpdate(sourceId, {
-          status: "ready",
-          error: "",
-        });
+        await Source.findByIdAndUpdate(
+          sourceId,
+          {
+            status: "ready",
+            error: "",
+          }
+        );
 
         return {
           success: true,
