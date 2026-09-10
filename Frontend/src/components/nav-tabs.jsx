@@ -20,11 +20,7 @@ const tabs = [
     label: "Sources",
     icon: FileStack,
   },
-  {
-    id: "learn",
-    label: "Learn",
-    icon: GraduationCap,
-  },
+ 
   {
     id: "podcast",
     label: "Podcast",

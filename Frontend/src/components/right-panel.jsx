@@ -17,11 +17,7 @@ const modeTabs = [
     label: "Sources",
     icon: ListTree,
   },
-  {
-    id: "graph",
-    label: "Graph",
-    icon: Network,
-  },
+ 
   {
     id: "citations",
     label: "Citations",
