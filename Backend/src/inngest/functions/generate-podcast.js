@@ -82,7 +82,7 @@ export const generatePodcast =
 
         /*
          * ============================================
-         * 3. GENERATE SCRIPT
+          3. GENERATE SCRIPT
          * ============================================
          */
 
