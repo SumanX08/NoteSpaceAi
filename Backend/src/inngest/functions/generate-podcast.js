@@ -246,9 +246,7 @@ export const generatePodcast =
           }
         );
 
-        /*
-         * Mark the podcast as failed.
-         */
+        
 
         await Podcast.findByIdAndUpdate(
           podcastId,
