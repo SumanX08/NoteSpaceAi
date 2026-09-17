@@ -8,9 +8,6 @@ import {
   streamAnswer,
 } from "../rag/retrieval/answer.js";
 
-// =====================================
-// ASK QUESTION
-// =====================================
 
 export const askQuestion = asyncHandler(
   async (req, res) => {
