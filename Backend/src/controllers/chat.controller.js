@@ -25,9 +25,7 @@ export const askQuestion = asyncHandler(
     console.log("NOTEBOOK ID:", notebookId);
     console.log("QUESTION:", question);
 
-    // ================================
-    // VALIDATION
-    // ================================
+  
 
     if (!userId) {
       return res.status(401).json({
