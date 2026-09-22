@@ -1,7 +1,8 @@
-import { Show, SignIn } from "@clerk/react";
+import { Show } from "@clerk/react";
 
 import "./App.css";
 
+import LandingPage from "./pages/LandingPage";
 import Sidebar from "./components/sidebar/Sidebar";
 import { TopBar } from "./components/top-bar";
 import { NavTabs } from "./components/nav-tabs";
@@ -11,6 +12,7 @@ import { ChatView } from "./components/chat/ChatView";
 import { SourceView } from "./components/sources/SourceView";
 import { LearnView } from "./components/learn-view";
 import PodcastView from "./components/podcast/PodcastView";
+
 import { useAppStore } from "@/store/appStore";
 import { useChatStore } from "@/store/chatStore";
 
@@ -18,16 +20,11 @@ import { useNotebookData } from "@/hooks/useNotebookData";
 import { useChat } from "@/hooks/useChat";
 
 
-
 function App() {
   return (
     <Show
       when="signed-in"
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background">
-          <SignIn />
-        </div>
-      }
+      fallback={<LandingPage />}
     >
       <NotebookApp />
     </Show>
@@ -125,22 +122,22 @@ function NotebookApp() {
   const activeNotebook =
     notebooks.find(
       (notebook) =>
-        notebook.id ===
-        activeNotebookId
+        notebook.id === activeNotebookId
     ) ?? notebooks[0];
 
-    const handleSourcesChange = (updatedSources) => {
-  setNotebooks((currentNotebooks) =>
-    currentNotebooks.map((notebook) =>
-      notebook.id === activeNotebook.id
-        ? {
-            ...notebook,
-            sources: updatedSources,
-          }
-        : notebook
-    )
-  );
-};
+
+  const handleSourcesChange = (updatedSources) => {
+    setNotebooks((currentNotebooks) =>
+      currentNotebooks.map((notebook) =>
+        notebook.id === activeNotebook.id
+          ? {
+              ...notebook,
+              sources: updatedSources,
+            }
+          : notebook
+      )
+    );
+  };
 
 
   // ====================================================
@@ -149,6 +146,7 @@ function NotebookApp() {
 
   const renderView = () => {
     switch (activeTab) {
+
       case "chat":
         return (
           <ChatView
@@ -166,14 +164,20 @@ function NotebookApp() {
           />
         );
 
+
       case "sources":
         return (
           <SourceView
-  notebookId={activeNotebook.id}
-  sources={activeNotebook.sources ?? []}
-  onSourcesChange={handleSourcesChange}
-/>
+            notebookId={activeNotebook.id}
+            sources={
+              activeNotebook.sources ?? []
+            }
+            onSourcesChange={
+              handleSourcesChange
+            }
+          />
         );
+
 
       case "learn":
         return (
@@ -182,12 +186,14 @@ function NotebookApp() {
           />
         );
 
+
       case "podcast":
         return (
           <PodcastView
             notebook={activeNotebook}
           />
         );
+
 
       default:
         return null;
@@ -204,29 +210,17 @@ function NotebookApp() {
 
       <Sidebar
         notebooks={notebooks}
-        onCreateNotebook={
-          createNotebook
-        }
-        onRenameNotebook={
-          renameNotebook
-        }
-        onDeleteNotebook={
-          deleteNotebook
-        }
-        onTogglePin={
-          togglePin
-        }
+        onCreateNotebook={createNotebook}
+        onRenameNotebook={renameNotebook}
+        onDeleteNotebook={deleteNotebook}
+        onTogglePin={togglePin}
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
 
         <TopBar
-          title={
-            activeNotebook.title
-          }
-          emoji={
-            activeNotebook.emoji
-          }
+          title={activeNotebook.title}
+          emoji={activeNotebook.emoji}
           onAddSource={() =>
             setActiveTab("sources")
           }
@@ -247,8 +241,7 @@ function NotebookApp() {
           {rightPanelOpen && (
             <RightPanel
               sources={
-                activeNotebook.sources ??
-                []
+                activeNotebook.sources ?? []
               }
             />
           )}
