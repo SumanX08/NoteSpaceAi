@@ -8,9 +8,6 @@ import {
   streamAnswer,
 } from "../rag/retrieval/answer.js";
 
-// =====================================
-// ASK QUESTION
-// =====================================
 
 export const askQuestion = asyncHandler(
   async (req, res) => {
@@ -28,9 +25,7 @@ export const askQuestion = asyncHandler(
     console.log("NOTEBOOK ID:", notebookId);
     console.log("QUESTION:", question);
 
-    // ================================
-    // VALIDATION
-    // ================================
+  
 
     if (!userId) {
       return res.status(401).json({

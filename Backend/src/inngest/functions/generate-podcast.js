@@ -82,7 +82,7 @@ export const generatePodcast =
 
         /*
          * ============================================
-         * 3. GENERATE SCRIPT
+          3. GENERATE SCRIPT
          * ============================================
          */
 
@@ -246,9 +246,7 @@ export const generatePodcast =
           }
         );
 
-        /*
-         * Mark the podcast as failed.
-         */
+        
 
         await Podcast.findByIdAndUpdate(
           podcastId,
