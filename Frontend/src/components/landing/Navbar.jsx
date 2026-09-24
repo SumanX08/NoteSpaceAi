@@ -1,9 +1,22 @@
-import { ArrowRight, BrainCircuit, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { SignUpButton } from "@clerk/react";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   const navLinks = [
     { name: "Features", href: "#features" },
@@ -13,88 +26,132 @@ function Navbar() {
   ];
 
   return (
-    <header className="fixed left-0 top-0 z-50 w-full border-b border-white/[0.06] bg-[#050607]/90 backdrop-blur-xl">
-      <nav className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between px-6 lg:px-8">
+    <header
+      className={`
+        site-nav
+        fixed left-0 right-0 top-0 z-50
+        transition-all duration-300
+        ${scrolled
+          ? "border-b border-white/[0.06] bg-[#030405]/85"
+          : "border-b border-transparent bg-[#030405]/50"
+        }
+      `}
+      style={{
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+      }}
+    >
+      <nav className="flex h-[60px] items-center justify-between px-6">
 
         {/* Logo */}
-        <a href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-blue-500/40 bg-blue-500/10 shadow-[0_0_25px_rgba(37,99,235,0.18)]">
-            <BrainCircuit
-              size={24}
-              strokeWidth={1.8}
-              className="text-blue-400"
-            />
-          </div>
+        <a
+          href="/"
+          className="flex items-center gap-2"
+        >
+          <img
+            src="/logo.png"
+            alt="Notespace AI"
+            className="h-7 w-7 rounded-[6px] object-contain"
+          />
 
-          <span className="text-[19px] font-semibold tracking-tight text-white">
-            Notespace <span className="text-blue-500">AI</span>
+          <span className="text-lg font-bold tracking-[-0.3px] text-[#F8FAFC]">
+            Notespace AI
           </span>
         </a>
 
-        {/* Desktop links */}
-        <div className="hidden items-center gap-10 md:flex">
+
+        {/* Desktop navigation */}
+        <div className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
-              className="text-[17px] font-medium text-slate-400 transition-colors hover:text-white"
+              className="
+                text-[14px]
+                font-medium
+                text-[#94A3B8]
+                transition-colors
+                duration-200
+                hover:text-[#F8FAFC]
+              "
             >
               {link.name}
             </a>
           ))}
         </div>
 
+
         {/* Desktop CTA */}
         <SignUpButton mode="modal">
-  <button
-    className="
-      flex items-center gap-2
-      rounded-xl
-      border border-blue-500/50
-      px-5 py-2.5
-      font-semibold
-      text-white
-      transition
-      hover:border-blue-400
-      hover:bg-blue-500/10
-    "
-  >
-    Get Started
-    <ArrowRight size={18} />
-  </button>
-</SignUpButton>
+          <button className="btn-primary px-[18px] py-2 text-[14px]">
+            Get Started →
+          </button>
+        </SignUpButton>
 
-        {/* Mobile button */}
+
+        {/* Mobile menu button */}
         <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="rounded-lg border border-white/10 p-2 text-slate-300 md:hidden"
+          onClick={() => setMenuOpen((open) => !open)}
+          className="
+            rounded-lg
+            border border-white/10
+            p-2
+            text-[#94A3B8]
+            transition-colors
+            hover:text-[#F8FAFC]
+            md:hidden
+          "
+          aria-label="Toggle menu"
         >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {menuOpen ? (
+            <X size={20} />
+          ) : (
+            <Menu size={20} />
+          )}
         </button>
       </nav>
 
+
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="border-t border-white/[0.06] bg-[#050607] px-6 py-5 md:hidden">
+        <div
+          className="
+            border-t border-white/[0.06]
+            bg-[#030405]/95
+            px-6
+            py-5
+            backdrop-blur-2xl
+            md:hidden
+          "
+        >
           <div className="flex flex-col gap-5">
+
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="text-base font-medium text-slate-400 hover:text-white"
+                className="
+                  text-[14px]
+                  font-medium
+                  text-[#94A3B8]
+                  transition-colors
+                  hover:text-[#F8FAFC]
+                "
               >
                 {link.name}
               </a>
             ))}
 
-            <a
-              href="/app"
-              className="flex items-center justify-center gap-2 rounded-xl border border-blue-500/50 py-3 font-semibold text-white"
-            >
-              Get Started
-              <ArrowRight size={18} />
-            </a>
+            <SignUpButton mode="modal">
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="btn-primary w-full py-3 text-[14px]"
+              >
+                Get Started →
+              </button>
+            </SignUpButton>
+
           </div>
         </div>
       )}

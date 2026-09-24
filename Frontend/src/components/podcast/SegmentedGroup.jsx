@@ -1,6 +1,4 @@
-import {
-  motion,
-} from "framer-motion";
+import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -13,17 +11,12 @@ export default function SegmentedGroup({
   return (
     <div className="flex items-center gap-0.5 rounded-xl border border-border bg-muted/30 p-0.5">
       {options.map((option) => {
-        const active =
-          value === option.id;
+        const active = value === option.id;
 
         return (
           <button
             key={option.id}
-            onClick={() =>
-              onChange(
-                option.id
-              )
-            }
+            onClick={() => onChange(option.id)}
             disabled={disabled}
             className={cn(
               "relative flex h-8 flex-1 items-center justify-center rounded-lg text-[0.8125rem] font-medium transition-colors",
@@ -37,9 +30,7 @@ export default function SegmentedGroup({
             {active && (
               <motion.span
                 layoutId={`seg-${options
-                  .map(
-                    (o) => o.id
-                  )
+                  .map((o) => o.id)
                   .join("")}`}
                 className="absolute inset-0 rounded-lg bg-background shadow-soft"
                 transition={{

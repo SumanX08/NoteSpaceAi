@@ -33,7 +33,7 @@ export function TopBar({ title, emoji, onAddSource }) {
         <span>Search in notebook...</span>
 
         <kbd className="ml-6 rounded bg-background/60 px-1.5 py-0.5 text-[0.625rem] font-medium text-muted-foreground">
-          ⌘F
+        
         </kbd>
       </button>
 

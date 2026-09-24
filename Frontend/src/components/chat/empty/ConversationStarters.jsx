@@ -9,7 +9,7 @@ export default function ConversationStarters({
       <div className="mb-6 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-primary" />
 
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium text-foreground">
           Suggested Questions
         </span>
       </div>
@@ -19,14 +19,27 @@ export default function ConversationStarters({
           <button
             key={question.id}
             onClick={() => onPick(question.prompt)}
-            className="rounded-xl border border-border bg-card px-4 py-3 text-left text-sm transition hover:border-primary/30 hover:bg-muted"
+            className="
+              rounded-xl
+              border
+              border-border
+              bg-card
+              px-4
+              py-3
+              text-left
+              text-sm
+              transition-all
+              hover:border-primary/30
+              hover:bg-muted
+              hover:shadow-soft
+            "
           >
-            <div className="font-medium">
+            <div className="font-medium text-foreground">
               {question.title}
             </div>
 
             {question.description && (
-              <div className="mt-1 text-xs text-muted-foreground">
+              <div className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 {question.description}
               </div>
             )}

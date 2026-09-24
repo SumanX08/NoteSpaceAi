@@ -72,14 +72,14 @@ export default function NotebookRow({
       className={cn(
         "group relative flex items-center gap-3 rounded-lg px-2 py-2 transition-colors",
         active
-          ? "bg-muted"
+          ? "bg-primary/10"
           : "hover:bg-muted/60"
       )}
     >
       {active && (
         <motion.span
           layoutId="active-notebook"
-          className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary"
+          className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary shadow-glow"
           transition={{
             type: "spring",
             stiffness: 400,
@@ -93,10 +93,10 @@ export default function NotebookRow({
         className="flex min-w-0 flex-1 items-center gap-3 text-left"
       >
         {notebook.isPinned && (
-          <Pin className="h-3 w-3 fill-current text-primary" />
+          <Pin className="h-3 w-3 shrink-0 fill-current text-primary" />
         )}
 
-        <span className="text-lg">
+        <span className="shrink-0 text-lg">
           {notebook.emoji}
         </span>
 
@@ -105,22 +105,40 @@ export default function NotebookRow({
             <input
               autoFocus
               value={title}
-              onChange={(e) =>
-                setTitle(e.target.value)
-              }
+              onChange={(e) => setTitle(e.target.value)}
               onBlur={handleSave}
               onKeyDown={(e) => {
-                if (e.key === "Enter")
+                if (e.key === "Enter") {
                   handleSave();
+                }
 
-                if (e.key === "Escape")
+                if (e.key === "Escape") {
                   handleCancel();
+                }
               }}
-              className="w-full rounded bg-transparent text-sm font-medium outline-none ring-1 ring-primary px-1"
+              className="
+                w-full
+                rounded-md
+                bg-input
+                px-1
+                text-sm
+                font-medium
+                text-foreground
+                outline-none
+                ring-1
+                ring-ring
+              "
             />
           ) : (
             <>
-              <p className="truncate text-sm font-medium">
+              <p
+                className={cn(
+                  "truncate text-sm font-medium",
+                  active
+                    ? "text-foreground"
+                    : "text-foreground/90"
+                )}
+              >
                 {notebook.title}
               </p>
 
@@ -136,43 +154,54 @@ export default function NotebookRow({
         <div className="flex gap-1">
           <button
             onClick={handleSave}
-            className="rounded p-1 hover:bg-muted"
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-success"
           >
-            <Check className="h-4 w-4 text-green-500" />
+            <Check className="h-4 w-4" />
           </button>
 
           <button
             onClick={handleCancel}
-            className="rounded p-1 hover:bg-muted"
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
           >
-            <X className="h-4 w-4 text-red-500" />
+            <X className="h-4 w-4" />
           </button>
         </div>
       ) : (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+              className="
+                rounded-md
+                p-1
+                text-muted-foreground
+                opacity-0
+                transition-opacity
+                group-hover:opacity-100
+                hover:bg-muted
+                hover:text-foreground
+              "
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent
+            align="end"
+            className="glass-strong border-border"
+          >
             <DropdownMenuItem
               onClick={() => onPin(notebook.id)}
             >
               <Pin className="mr-2 h-4 w-4" />
-              {notebook.isPinned
-                ? "Unpin"
-                : "Pin"}
+
+              {notebook.isPinned ? "Unpin" : "Pin"}
             </DropdownMenuItem>
 
             <DropdownMenuItem
               onClick={() => setEditing(true)}
             >
               <Pencil className="mr-2 h-4 w-4" />
-              Rename 
+              Rename
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -180,25 +209,22 @@ export default function NotebookRow({
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem
-                  className="text-red-500"
-                  onSelect={(e) =>
-                    e.preventDefault()
-                  }
+                  className="text-destructive focus:text-destructive"
+                  onSelect={(e) => e.preventDefault()}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete 
+                  Delete
                 </DropdownMenuItem>
               </AlertDialogTrigger>
 
-              <AlertDialogContent>
+              <AlertDialogContent className="glass-strong border-border">
                 <AlertDialogHeader>
                   <AlertDialogTitle>
                     Delete Workspace?
                   </AlertDialogTitle>
 
                   <AlertDialogDescription>
-                    This action cannot be
-                    undone.
+                    This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
 
@@ -208,9 +234,7 @@ export default function NotebookRow({
                   </AlertDialogCancel>
 
                   <AlertDialogAction
-                    onClick={() =>
-                      onDelete(notebook.id)
-                    }
+                    onClick={() => onDelete(notebook.id)}
                   >
                     Delete
                   </AlertDialogAction>

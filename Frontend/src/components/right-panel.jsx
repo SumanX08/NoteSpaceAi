@@ -1,13 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
-  Network,
   ListTree,
   Quote,
 } from "lucide-react";
+
 import CitationsList from "./chat/markdown/CitationsList";
 import { KnowledgeGraph } from "./knowledge-graph";
 import SourceList from "./sources/SourceList";
+
 import { useAppStore } from "@/store/appStore";
 import { cn } from "@/lib/utils";
 
@@ -17,15 +18,12 @@ const modeTabs = [
     label: "Sources",
     icon: ListTree,
   },
- 
   {
     id: "citations",
     label: "Citations",
     icon: Quote,
   },
 ];
-
-
 
 export function RightPanel({ sources = [] }) {
   const {
@@ -49,21 +47,18 @@ export function RightPanel({ sources = [] }) {
   );
 
   // Only sources used in the current response
-  const responseSources =
-    sources.filter((source) =>
+  const responseSources = sources.filter(
+    (source) =>
       usedSourceIds.has(
         String(source._id || source.id)
       )
-    );
+  );
 
   return (
     <aside className="flex h-full w-95 flex-col border-l border-border bg-background">
-
-      {/* HEADER */}
+      {/* Header */}
       <div className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-3">
-
         <div className="flex flex-1 items-center gap-0.5 rounded-lg bg-muted/30 p-0.5">
-
           {modeTabs.map((tab) => {
             const Icon = tab.icon;
 
@@ -77,7 +72,18 @@ export function RightPanel({ sources = [] }) {
                   setPanelMode(tab.id)
                 }
                 className={cn(
-                  "flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md text-[0.75rem] font-medium transition-colors",
+                  `
+                    flex
+                    h-7
+                    flex-1
+                    items-center
+                    justify-center
+                    gap-1.5
+                    rounded-md
+                    text-[0.75rem]
+                    font-medium
+                    transition-colors
+                  `,
                   active
                     ? "bg-background text-foreground shadow-soft"
                     : "text-muted-foreground hover:text-foreground"
@@ -89,25 +95,32 @@ export function RightPanel({ sources = [] }) {
               </button>
             );
           })}
-
         </div>
 
         <button
           onClick={() =>
             setRightPanelOpen(false)
           }
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="
+            flex
+            h-7
+            w-7
+            items-center
+            justify-center
+            rounded-md
+            text-muted-foreground
+            transition-colors
+            hover:bg-muted
+            hover:text-foreground
+          "
         >
           <X className="h-4 w-4" />
         </button>
-
       </div>
 
-      {/* CONTENT */}
+      {/* Content */}
       <div className="flex-1 overflow-hidden">
-
         <AnimatePresence mode="wait">
-
           <motion.div
             key={panelMode}
             initial={{ opacity: 0 }}
@@ -118,20 +131,19 @@ export function RightPanel({ sources = [] }) {
             }}
             className="h-full"
           >
-
-            {/* SOURCES */}
+            {/* Sources */}
             {panelMode === "sources" && (
               <SourceList
                 sources={responseSources}
               />
             )}
 
-            {/* GRAPH */}
+            {/* Graph */}
             {panelMode === "graph" && (
               <KnowledgeGraph />
             )}
 
-            {/* CITATIONS */}
+            {/* Citations */}
             {panelMode === "citations" && (
               <CitationsList
                 citations={activeMessageCitations}
@@ -147,13 +159,9 @@ export function RightPanel({ sources = [] }) {
                 }}
               />
             )}
-
           </motion.div>
-
         </AnimatePresence>
-
       </div>
-
     </aside>
   );
 }

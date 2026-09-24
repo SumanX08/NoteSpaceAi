@@ -12,6 +12,7 @@ import {
 import Markdown from "./markdown/Markdown";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/appStore";
+import CitationPill from "./markdown/CitationPill";
 
 export default function MessageBubble({
   message,
@@ -40,8 +41,6 @@ export default function MessageBubble({
     }, 1500);
   };
 
-  
-
   if (isUser) {
     return (
       <div className="flex justify-end">
@@ -54,7 +53,17 @@ export default function MessageBubble({
             opacity: 1,
             y: 0,
           }}
-          className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm text-primary-foreground shadow-soft"
+          className="
+            max-w-[80%]
+            rounded-2xl
+            rounded-br-md
+            bg-[#1D315B]
+            px-4
+            py-3
+            text-sm
+            text-primary-foreground
+            shadow-soft
+          "
         >
           {message.content}
         </motion.div>
@@ -75,42 +84,79 @@ export default function MessageBubble({
       className="group"
     >
       <div className="flex gap-3">
-
-        {/* Avatar */}
-
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+        {/* AI Avatar */}
+        <div
+          className="
+            flex
+            h-8
+            w-8
+            shrink-0
+            items-center
+            justify-center
+            rounded-full
+            bg-primary/10
+            ring-1
+            ring-primary/20
+          "
+        >
           <Bot className="h-4 w-4 text-primary" />
         </div>
-
-        {/* Message */}
-
-        <div className="min-w-0 flex-1">
-
-          <Markdown
-            content={message.content}
-            citations={
-              message.citations ?? []
-            }
-            onCitationHover={
-              onCitationHover
-            }
-             onCitationClick={(citation) => {
+<div className="flex flex-col">
+  <div className="min-w-0 flex-1 
+    rounded-2xl
+    rounded-tl-md
+    border
+    border-[#1F2937]
+    bg-[#111827]
+    px-5
+    py-4  ">
+         <Markdown
+  content={message.content}
+  citations={message.citations ?? []}
+  showCitations={false}
+  onCitationHover={onCitationHover}
+  onCitationClick={(citation) => {
     onCitationClick(
       citation,
       message.citations
     );
   }}
-          />
+/>
+
+{message.citations?.length > 0 && (
+  <div className="mt-2 flex flex-wrap gap-1.5">
+    {message.citations.map((citation) => (
+      <CitationPill
+        key={`${citation.sourceId}-${citation.index}`}
+        citation={citation}
+        onClick={() =>
+          onCitationClick(
+            citation,
+            message.citations
+          )
+        }
+      />
+    ))}
+  </div>
+)}
 
           {/* Actions */}
-
-          <div className="mt-3 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-
-            <IconButton
-              onClick={handleCopy}
-            >
+          
+        </div>
+        <div
+            className="
+              mt-3
+              flex
+              items-center
+              gap-1
+              opacity-0
+              transition-opacity
+              group-hover:opacity-100
+            "
+          >
+            <IconButton onClick={handleCopy}>
               {copied ? (
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4 text-success" />
               ) : (
                 <Copy className="h-4 w-4" />
               )}
@@ -127,9 +173,10 @@ export default function MessageBubble({
             <IconButton>
               <RefreshCw className="h-4 w-4" />
             </IconButton>
-
           </div>
-        </div>
+</div>
+        {/* Message */}
+        
       </div>
     </motion.div>
   );
@@ -144,7 +191,14 @@ function IconButton({
     <button
       {...props}
       className={cn(
-        "rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+        `
+          rounded-md
+          p-1.5
+          text-muted-foreground
+          transition-colors
+          hover:bg-muted
+          hover:text-foreground
+        `,
         className
       )}
     >

@@ -12,9 +12,7 @@ import {
 
 import { cn } from "@/lib/utils";
 
-import {
-  styleLabel,
-} from "./podcast.constants";
+import { styleLabel } from "./podcast.constants";
 
 import PodcastPlayer from "./PodcastPlayer";
 
@@ -35,26 +33,22 @@ export default function PodcastCard({
     Boolean(podcast.audioUrl);
 
   const isGenerating =
-    podcast.status ===
-    "generating";
+    podcast.status === "generating";
 
   const isFailed =
-    podcast.status ===
-    "failed";
+    podcast.status === "failed";
 
   return (
     <div className="rounded-2xl border border-border bg-card/40 p-4 transition-colors hover:bg-card/60">
       <div className="flex items-center gap-3.5">
+        {/* Play */}
         <button
           onClick={() =>
-            onTogglePlay(
-              podcast
-            )
+            onTogglePlay(podcast)
           }
           disabled={!isReady}
           className={cn(
             "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all",
-
             isReady
               ? "bg-primary text-primary-foreground shadow-glow hover:bg-primary-hover"
               : "cursor-not-allowed bg-muted text-muted-foreground-dim"
@@ -104,18 +98,15 @@ export default function PodcastCard({
           </AnimatePresence>
         </button>
 
+        {/* Podcast info */}
         <div className="min-w-0 flex-1">
-          <h4 className="truncate text-[0.875rem] font-medium">
+          <h4 className="truncate text-[0.875rem] font-medium text-foreground">
             {podcast.title}
           </h4>
 
           <div className="mt-0.5 flex items-center gap-2 text-[0.6875rem] text-muted-foreground">
-            <span className="rounded bg-muted px-1.5 py-0.5 font-medium">
-              {
-                styleLabel[
-                  podcast.style
-                ]
-              }
+            <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-muted-foreground">
+              {styleLabel[podcast.style]}
             </span>
 
             <span className="text-muted-foreground-dim">
@@ -136,17 +127,15 @@ export default function PodcastCard({
           </div>
         </div>
 
+        {/* Actions */}
         <div className="flex items-center gap-0.5">
           <button
             onClick={() =>
-              onDownload(
-                podcast
-              )
+              onDownload(podcast)
             }
             disabled={!isReady}
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground-dim transition-colors hover:bg-muted hover:text-foreground",
-
+              "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
               !isReady &&
                 "cursor-not-allowed opacity-40"
             )}
@@ -154,12 +143,26 @@ export default function PodcastCard({
             <Download className="h-3.5 w-3.5" />
           </button>
 
-          <button className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground-dim transition-colors hover:bg-muted hover:text-foreground">
+          <button
+            className="
+              flex
+              h-7
+              w-7
+              items-center
+              justify-center
+              rounded-md
+              text-muted-foreground
+              transition-colors
+              hover:bg-muted
+              hover:text-foreground
+            "
+          >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
+      {/* Player */}
       {playing && isReady && (
         <motion.div
           initial={{
@@ -173,37 +176,29 @@ export default function PodcastCard({
         >
           <PodcastPlayer
             progress={progress}
-            currentTime={
-              currentTime
-            }
-            audioDuration={
-              audioDuration
-            }
+            currentTime={currentTime}
+            audioDuration={audioDuration}
             onSeek={onSeek}
-            onSkipBack={
-              onSkipBack
-            }
-            onSkipForward={
-              onSkipForward
-            }
+            onSkipBack={onSkipBack}
+            onSkipForward={onSkipForward}
           />
         </motion.div>
       )}
 
+      {/* Generating */}
       {isGenerating && (
         <div className="mt-3 flex items-center gap-2 text-[0.6875rem] text-muted-foreground">
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-            <div className="h-full w-1/3 rounded-full bg-primary animate-soft-pulse" />
+            <div className="h-full w-1/3 animate-soft-pulse rounded-full bg-primary" />
           </div>
 
-          <span>
-            Generating…
-          </span>
+          <span>Generating…</span>
         </div>
       )}
 
+      {/* Failed */}
       {isFailed && (
-        <div className="mt-3 text-[0.6875rem] text-red-500">
+        <div className="mt-3 text-[0.6875rem] text-destructive">
           {podcast.error ||
             "Generation failed"}
         </div>

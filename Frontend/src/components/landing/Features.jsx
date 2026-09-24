@@ -1,96 +1,173 @@
 import {
-  Boxes,
-  BrainCircuit,
-  Search,
-  Crosshair,
   Files,
-  MessageSquare,
+  Layers,
+  Scissors,
+  Boxes,
+  Database,
+  Search,
+  BrainCircuit,
+  Sparkles,
 } from "lucide-react";
 
-const features = [
-  {
-    icon: Boxes,
-    title: "AI-Powered Notebooks",
-    description:
-      "Organize your knowledge into focused notebooks and interact with it naturally.",
-  },
-  {
-    icon: BrainCircuit,
-    title: "Advanced RAG",
-    description:
-      "Retrieve relevant information from your own knowledge base before generating an answer.",
-  },
-  {
-    icon: Search,
-    title: "Semantic Search",
-    description:
-      "Find information based on meaning instead of relying only on keywords.",
-  },
-  {
-    icon: Crosshair,
-    title: "Source Citations",
-    description:
-      "See exactly where an answer came from — down to the document and passage.",
-  },
-  {
-    icon: Files,
-    title: "Multiple Sources",
-    description:
-      "Work with documents, websites, transcripts, and other learning material.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Context-Aware Chat",
-    description:
-      "Ask follow-up questions while maintaining full conversational context.",
-  },
+const pipeline = [
+  { label: "Sources", icon: Files },
+  { label: "Extraction", icon: Layers },
+  { label: "Chunking", icon: Scissors },
+  { label: "Embeddings", icon: Boxes },
+  { label: "Vector Database", icon: Database },
+  { label: "Retrieval", icon: Search },
+  { label: "LLM", icon: BrainCircuit },
+  { label: "Grounded Response", icon: Sparkles },
 ];
 
-function Features() {
+function Architecture() {
   return (
     <section
-      id="features"
-      className="bg-[#030405] px-6 py-32"
+      id="architecture"
+      className="relative overflow-hidden bg-[hsl(var(--background))] px-6 py-[120px]"
     >
-      <div className="mx-auto max-w-6xl">
+      {/* Subtle background glow */}
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[450px] w-[800px] -translate-x-1/2 rounded-full bg-[rgba(37,99,235,0.06)] blur-[120px]" />
 
-        <div className="mb-20 text-center">
-          <span className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-            Features
-          </span>
+      <div className="relative mx-auto max-w-[1100px]">
 
-          <h2 className="mx-auto mt-5 max-w-3xl text-4xl font-bold tracking-tight text-white md:text-5xl">
-            Everything you need to work with knowledge.
+        {/* Heading */}
+        <div className="text-center">
+          <p className="mb-3.5 text-[13px] font-semibold uppercase tracking-[0.1em] text-[hsl(var(--primary-hover))]">
+            Architecture
+          </p>
+
+          <h2 className="text-[clamp(32px,5vw,52px)] font-extrabold leading-[1.1] tracking-[-1.5px] text-[hsl(var(--foreground))]">
+            Not just chat.
+            <br />
+            <span className="text-gradient-accent">
+              Retrieval. Context. Answers.
+            </span>
           </h2>
+
+          <p className="mx-auto mt-5 max-w-3xl text-[15px] leading-[1.7] text-[hsl(var(--muted-foreground))]">
+            Notespace AI combines document processing, embeddings, vector
+            search, retrieval, and LLM generation to build a knowledge system
+            grounded in your own content.
+          </p>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => {
-            const Icon = feature.icon;
+        {/* Pipeline */}
+        <div className="mt-20 flex flex-wrap items-start justify-center gap-y-10 lg:flex-nowrap">
+
+          {pipeline.map((item, index) => {
+            const Icon = item.icon;
 
             return (
               <div
-                key={feature.title}
-                className="group rounded-2xl border border-white/[0.08] bg-white/[0.025] p-7 transition duration-300 hover:border-blue-500/30 hover:bg-blue-500/[0.025]"
+                key={item.label}
+                className="flex items-start"
               >
-                <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/[0.06]">
-                  <Icon size={19} className="text-blue-400" />
+                {/* Pipeline item */}
+                <div className="flex w-28 flex-col items-center text-center">
+
+                  {/* Icon */}
+                  <div
+                    className="
+                      flex
+                      h-14
+                      w-14
+                      items-center
+                      justify-center
+                      rounded-xl
+                      border
+                      border-[hsl(var(--border))]
+                      bg-[hsl(var(--card))]
+                      shadow-soft
+                      transition-all
+                      duration-300
+                      hover:border-[hsl(var(--border-strong))]
+                      hover:bg-[hsl(var(--accent))]
+                      hover:shadow-glow
+                    "
+                  >
+                    <Icon
+                      size={22}
+                      strokeWidth={1.5}
+                      className="text-[hsl(var(--primary-hover))]"
+                    />
+                  </div>
+
+                  {/* Label */}
+                  <p className="mt-3 text-xs font-medium leading-5 text-[hsl(var(--muted-foreground))]">
+                    {item.label}
+                  </p>
+
+                  {/* Pipeline node */}
+                  <div
+                    className="
+                      mt-5
+                      h-1
+                      w-1
+                      rounded-full
+                      bg-[hsl(var(--primary))]
+                      shadow-[0_0_10px_hsla(221,83%,53%,0.8)]
+                    "
+                  />
                 </div>
 
-                <h3 className="text-lg font-semibold text-white">
-                  {feature.title}
-                </h3>
-
-                <p className="mt-4 text-sm leading-6 text-slate-400">
-                  {feature.description}
-                </p>
+                {/* Connector */}
+                {index !== pipeline.length - 1 && (
+                  <div
+                    className="
+                      mt-7
+                      hidden
+                      h-px
+                      w-10
+                      bg-[rgba(37,99,235,0.3)]
+                      lg:block
+                    "
+                  />
+                )}
               </div>
             );
           })}
+        </div>
+
+        {/* Stats */}
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["1,284", "indexed chunks"],
+            ["384-dim", "embedding vectors"],
+            ["top-k", "retrieval window"],
+            ["100%", "grounded answers"],
+          ].map(([value, label]) => (
+            <div
+              key={label}
+              className="
+                group
+                rounded-[14px]
+                border
+                border-[hsl(var(--border))]
+                bg-[hsl(var(--card))]
+                p-6
+                text-center
+                backdrop-blur-[24px]
+                transition-all
+                duration-300
+                hover:border-[rgba(37,99,235,0.3)]
+                hover:bg-[rgba(255,255,255,0.05)]
+                hover:shadow-[0_8px_35px_rgba(37,99,235,0.08)]
+              "
+            >
+              <p className="text-2xl font-bold text-[hsl(var(--primary-hover))]">
+                {value}
+              </p>
+
+              <p className="mt-1 text-xs text-[hsl(var(--muted-foreground-dim))]">
+                {label}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-export default Features;
+export default Architecture;

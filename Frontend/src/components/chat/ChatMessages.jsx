@@ -36,27 +36,26 @@ export default function ChatMessages({
     (state) => state.setPreviewSource
   );
 
- function handleCitationClick(citation) {
-  console.log("Citation clicked:", citation);
+  function handleCitationClick(citation) {
+    console.log("Citation clicked:", citation);
 
-  const source = sources.find(
-    (source) =>
-      String(source._id || source.id) ===
-      String(citation.sourceId)
-  );
-
-  if (!source) {
-    console.error(
-      "Source not found for citation:",
-      citation
+    const source = sources.find(
+      (source) =>
+        String(source._id || source.id) ===
+        String(citation.sourceId)
     );
-    return;
+
+    if (!source) {
+      console.error(
+        "Source not found for citation:",
+        citation
+      );
+      return;
+    }
+
+    setPreviewSource(source);
+    setSelectedCitation(citation);
   }
-
-  setPreviewSource(source);
-
-  setSelectedCitation(citation);
-}
 
   const hasIndexedSources = sources.length > 0;
 
@@ -80,10 +79,9 @@ export default function ChatMessages({
   return (
     <div
       ref={scrollRef}
-      className="flex-1 overflow-y-auto scrollbar-thin"
+      className="scrollbar-thin flex-1 overflow-y-auto"
     >
-      <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-6 py-8">
-
+      <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-2 py-6">
         {messages.length === 0 ? (
           hasIndexedSources ? (
             <div className="flex flex-1 items-center justify-center">

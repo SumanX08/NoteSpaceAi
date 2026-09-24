@@ -8,12 +8,10 @@ export default function CodeBlock({
   className,
   children,
 }) {
-  const [copied, setCopied] =
-    useState(false);
+  const [copied, setCopied] = useState(false);
 
   const language =
-    className?.replace("language-", "") ??
-    "text";
+    className?.replace("language-", "") ?? "text";
 
   const code = String(children).replace(
     /\n$/,
@@ -21,9 +19,7 @@ export default function CodeBlock({
   );
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(
-      code
-    );
+    await navigator.clipboard.writeText(code);
 
     setCopied(true);
 
@@ -33,31 +29,37 @@ export default function CodeBlock({
   }
 
   return (
-    <div className="my-4 overflow-hidden rounded-xl border border-border bg-card">
-
-      <div className="flex items-center justify-between border-b border-border bg-muted px-3 py-2">
-
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="my-4 overflow-hidden rounded-xl border border-border bg-card shadow-soft">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border bg-muted/60 px-3 py-2">
+        <span className="font-mono text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {language}
         </span>
 
         <button
           onClick={handleCopy}
-          className="rounded-md p-1 hover:bg-background"
+          title="Copy code"
+          className="
+            rounded-md
+            p-1
+            text-muted-foreground
+            transition-colors
+            hover:bg-background
+            hover:text-foreground
+          "
         >
           {copied ? (
-            <Check className="h-4 w-4 text-green-500" />
+            <Check className="h-4 w-4 text-success" />
           ) : (
             <Copy className="h-4 w-4" />
           )}
         </button>
-
       </div>
 
-      <pre className="overflow-x-auto p-4 text-sm">
+      {/* Code */}
+      <pre className="scrollbar-thin overflow-x-auto p-4 font-mono text-sm leading-relaxed text-foreground">
         <code>{code}</code>
       </pre>
-
     </div>
   );
 }

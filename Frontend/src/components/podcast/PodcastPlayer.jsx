@@ -16,7 +16,11 @@ export default function PodcastPlayer({
       <div className="flex items-center gap-3">
         <button
           onClick={onSkipBack}
-          className="text-muted-foreground hover:text-foreground"
+          className="
+            text-muted-foreground
+            transition-colors
+            hover:text-foreground
+          "
           title="Back 10 seconds"
         >
           <SkipBack className="h-3.5 w-3.5" />
@@ -31,25 +35,32 @@ export default function PodcastPlayer({
           onChange={(event) =>
             onSeek(event.target.value)
           }
-          className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-muted accent-primary"
+          className="
+            h-1
+            flex-1
+            cursor-pointer
+            appearance-none
+            rounded-full
+            bg-muted
+            accent-primary
+          "
         />
 
         <button
           onClick={onSkipForward}
-          className="text-muted-foreground hover:text-foreground"
+          className="
+            text-muted-foreground
+            transition-colors
+            hover:text-foreground
+          "
           title="Forward 10 seconds"
         >
           <SkipForward className="h-3.5 w-3.5" />
         </button>
 
         <span className="w-24 text-right font-mono text-[0.6875rem] text-muted-foreground">
-          {formatSeconds(
-            currentTime
-          )}{" "}
-          /{" "}
-          {formatSeconds(
-            audioDuration
-          )}
+          {formatSeconds(currentTime)} /{" "}
+          {formatSeconds(audioDuration)}
         </span>
       </div>
     </div>
@@ -64,16 +75,10 @@ function formatSeconds(seconds) {
     return "0:00";
   }
 
-  const total =
-    Math.floor(seconds);
+  const total = Math.floor(seconds);
 
-  const mins =
-    Math.floor(total / 60);
+  const mins = Math.floor(total / 60);
+  const secs = total % 60;
 
-  const secs =
-    total % 60;
-
-  return `${mins}:${String(
-    secs
-  ).padStart(2, "0")}`;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
 }

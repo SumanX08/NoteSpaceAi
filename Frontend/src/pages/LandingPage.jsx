@@ -18,7 +18,7 @@ function LandingPage() {
         <ProductPreview />
         <Features />
         <KnowledgeSources />
-        <Pricing />
+        
         <Architecture/>
         <FinalCTA />
       </main>

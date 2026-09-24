@@ -3,6 +3,7 @@ import PodcastList from "./PodcastList";
 
 import { usePodcastData } from "@/hooks/usePodcastData";
 import { usePodcastPlayer } from "@/hooks/usePodcastPlayer";
+
 export default function PodcastView({
   notebook,
 }) {
@@ -12,95 +13,62 @@ export default function PodcastView({
     submitting,
     error,
     createPodcast,
-  } = usePodcastData(
-    notebook?.id
+  } = usePodcastData(notebook?.id);
+
+  const player = usePodcastPlayer();
+
+  const hasGenerating = podcasts.some(
+    (podcast) =>
+      podcast.status === "generating"
   );
 
-  const player =
-    usePodcastPlayer();
+  const handleDownload = (podcast) => {
+    if (!podcast?.audioUrl) {
+      return;
+    }
 
-  const hasGenerating =
-    podcasts.some(
-      (podcast) =>
-        podcast.status ===
-        "generating"
-    );
+    const link = document.createElement("a");
 
-  const handleDownload =
-    (podcast) => {
-      if (!podcast?.audioUrl) {
-        return;
-      }
+    link.href = podcast.audioUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.download = `${podcast.title}.mp3`;
 
-      const link =
-        document.createElement(
-          "a"
-        );
+    document.body.appendChild(link);
 
-      link.href =
-        podcast.audioUrl;
+    link.click();
 
-      link.target = "_blank";
+    document.body.removeChild(link);
+  };
 
-      link.rel =
-        "noopener noreferrer";
-
-      link.download =
-        `${podcast.title}.mp3`;
-
-      document.body.appendChild(
-        link
-      );
-
-      link.click();
-
-      document.body.removeChild(
-        link
-      );
-    };
-
-  const handleGenerate =
-    async (options) => {
-      await createPodcast(
-        options
-      );
-    };
+  const handleGenerate = async (options) => {
+    await createPodcast(options);
+  };
 
   return (
-    <div className="h-full overflow-y-auto scrollbar-thin">
+    <div className="scrollbar-thin h-full overflow-y-auto">
       <audio
         ref={player.audioRef}
-        onTimeUpdate={
-          player.handleTimeUpdate
-        }
-        onLoadedMetadata={
-          player.handleLoadedMetadata
-        }
-        onEnded={
-          player.handleEnded
-        }
+        onTimeUpdate={player.handleTimeUpdate}
+        onLoadedMetadata={player.handleLoadedMetadata}
+        onEnded={player.handleEnded}
       />
 
       <div className="mx-auto max-w-2xl px-6 py-6">
         <div className="mb-6">
-          <h2 className="text-base font-semibold tracking-tight">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
             Podcast Studio
           </h2>
 
           <p className="mt-0.5 text-[0.8125rem] text-muted-foreground">
-            Turn your notebook into an
-            audio overview
+            Turn your notebook into an audio overview
           </p>
         </div>
 
         <PodcastGenerator
-          onGenerate={
-            handleGenerate
-          }
+          onGenerate={handleGenerate}
           submitting={submitting}
-          hasGenerating={
-            hasGenerating
-          }
+          hasGenerating={hasGenerating}
           error={error}
         />
 
@@ -113,30 +81,14 @@ export default function PodcastView({
             podcasts={podcasts}
             loading={loading}
             playing={player.playing}
-            progress={
-              player.progress
-            }
-            currentTime={
-              player.currentTime
-            }
-            audioDuration={
-              player.audioDuration
-            }
-            onTogglePlay={
-              player.togglePlay
-            }
-            onSeek={
-              player.seek
-            }
-            onSkipBack={() =>
-              player.skip(-10)
-            }
-            onSkipForward={() =>
-              player.skip(10)
-            }
-            onDownload={
-              handleDownload
-            }
+            progress={player.progress}
+            currentTime={player.currentTime}
+            audioDuration={player.audioDuration}
+            onTogglePlay={player.togglePlay}
+            onSeek={player.seek}
+            onSkipBack={() => player.skip(-10)}
+            onSkipForward={() => player.skip(10)}
+            onDownload={handleDownload}
           />
         </div>
       </div>
