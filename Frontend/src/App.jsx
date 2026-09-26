@@ -106,13 +106,7 @@ function NotebookApp() {
   // EMPTY
   // ====================================================
 
-  if (!notebooks.length) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        No notebooks found.
-      </div>
-    );
-  }
+  
 
 
   // ====================================================
@@ -123,21 +117,23 @@ function NotebookApp() {
     notebooks.find(
       (notebook) =>
         notebook.id === activeNotebookId
-    ) ?? notebooks[0];
+    ) ?? null;
 
 
-  const handleSourcesChange = (updatedSources) => {
-    setNotebooks((currentNotebooks) =>
-      currentNotebooks.map((notebook) =>
-        notebook.id === activeNotebook.id
-          ? {
-              ...notebook,
-              sources: updatedSources,
-            }
-          : notebook
-      )
-    );
-  };
+const handleSourcesChange = (updatedSources) => {
+  if (!activeNotebook) return;
+
+  setNotebooks((currentNotebooks) =>
+    currentNotebooks.map((notebook) =>
+      notebook.id === activeNotebook.id
+        ? {
+            ...notebook,
+            sources: updatedSources,
+          }
+        : notebook
+    )
+  );
+};
 
 
   // ====================================================
@@ -145,6 +141,43 @@ function NotebookApp() {
   // ====================================================
 
   const renderView = () => {
+     if (!activeNotebook) {
+    return (
+      <div className="flex h-full items-center justify-center px-6">
+        <div className="max-w-md text-center">
+
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            No notebooks yet
+          </h2>
+
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Create your first workspace to start adding
+            sources and chatting with your knowledge.
+          </p>
+
+          <button
+            onClick={createNotebook}
+            className="
+              mt-6
+              rounded-lg
+              bg-primary
+              px-5
+              py-2.5
+              text-sm
+              font-medium
+              text-primary-foreground
+              shadow-soft
+              transition-colors
+              hover:bg-primary-hover
+            "
+          >
+            Create your first notebook
+          </button>
+
+        </div>
+      </div>
+    );
+  }
     switch (activeTab) {
 
       case "chat":
@@ -216,39 +249,47 @@ function NotebookApp() {
         onTogglePin={togglePin}
       />
 
-      <main className="flex min-w-0 flex-1 flex-col">
+     <main className="flex min-w-0 flex-1 flex-col">
 
-        <TopBar
-          title={activeNotebook.title}
-          emoji={activeNotebook.emoji}
-          onAddSource={() =>
-            setActiveTab("sources")
-          }
-        />
+  {activeNotebook ? (
+    <>
+      <TopBar
+        title={activeNotebook.title}
+        emoji={activeNotebook.emoji}
+        onAddSource={() =>
+          setActiveTab("sources")
+        }
+      />
 
-        <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
 
-          <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
 
-            <NavTabs />
+          <NavTabs />
 
-            <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-              {renderView()}
-            </div>
-
+          <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+            {renderView()}
           </div>
-
-          {rightPanelOpen && (
-            <RightPanel
-              sources={
-                activeNotebook.sources ?? []
-              }
-            />
-          )}
 
         </div>
 
-      </main>
+        {rightPanelOpen && (
+          <RightPanel
+            sources={
+              activeNotebook.sources ?? []
+            }
+          />
+        )}
+
+      </div>
+    </>
+  ) : (
+    <div className="flex min-h-0 flex-1">
+      {renderView()}
+    </div>
+  )}
+
+</main>
 
     </div>
   );
