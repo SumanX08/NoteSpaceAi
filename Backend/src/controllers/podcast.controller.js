@@ -144,7 +144,7 @@ export async function generatePodcast(
     console.log("🚀 Sending podcast event to Inngest...");
 
 
-    const eventResul = await inngest.send({
+    const eventResult = await inngest.send({
       name: "podcast/generate",
 
       data: {
