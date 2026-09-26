@@ -141,7 +141,10 @@ export async function generatePodcast(
      * ---------------------------------------------
      */
 
-    await inngest.send({
+    console.log("🚀 Sending podcast event to Inngest...");
+
+
+    const eventResul = await inngest.send({
       name: "podcast/generate",
 
       data: {
@@ -161,6 +164,11 @@ export async function generatePodcast(
           numericDuration,
       },
     });
+
+    console.log(
+  "🚀 Podcast event sent successfully:",
+  eventResult
+);
 
     /*
      * ---------------------------------------------

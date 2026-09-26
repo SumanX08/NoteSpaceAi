@@ -37,6 +37,10 @@ app.get("/",(req,res)=>{
 })
 
 app.use("/api/inngest",serve({client: inngest,functions,}));
+console.log(
+  "🚀 Inngest registered with functions:",
+  functions.map((fn) => fn.id)
+);
 
 app.use("/api/notebooks", notebookRoutes);
 app.use("/api/sources", sourceRoutes);
