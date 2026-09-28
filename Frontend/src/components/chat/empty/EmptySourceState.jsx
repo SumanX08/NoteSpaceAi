@@ -1,6 +1,6 @@
 import { Upload } from "lucide-react";
 
-export default function EmptyNotebookState({
+export default function EmptySourceState({
   onAddSource,
 }) {
   return (

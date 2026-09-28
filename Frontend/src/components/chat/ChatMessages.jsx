@@ -5,7 +5,7 @@ import { useAppStore } from "@/store/appStore";
 import { buildSuggestions } from "@/lib/suggestions";
 
 import MessageBubble from "./MessageBubble";
-import EmptyNotebookState from "./empty/EmptyNotebookState";
+import EmptySourceState from "./empty/EmptySourceState";
 import ConversationStarters from "./empty/ConversationStarters";
 
 export default function ChatMessages({
@@ -92,7 +92,7 @@ export default function ChatMessages({
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center">
-              <EmptyNotebookState
+              <EmptySourceState
                 onAddSource={() =>
                   setActiveTab("sources")
                 }

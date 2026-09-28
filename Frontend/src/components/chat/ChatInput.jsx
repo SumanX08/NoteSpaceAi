@@ -86,13 +86,7 @@ export default function ChatInput({
 
           {/* Toolbar */}
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-1 px-2.5 py-2">
-            <ToolbarButton>
-              <Paperclip className="h-4 w-4" />
-            </ToolbarButton>
-
-            <ToolbarButton>
-              <AtSign className="h-4 w-4" />
-            </ToolbarButton>
+            
 
             <span className="ml-2 text-[11px] text-muted-foreground">
               {input.length
@@ -129,31 +123,9 @@ export default function ChatInput({
           </div>
         </div>
 
-        <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          Lumen can make mistakes. Verify important information against your sources.
-        </p>
+        
       </div>
     </div>
   );
 }
 
-function ToolbarButton({ children }) {
-  return (
-    <button
-      className="
-        flex
-        h-8
-        w-8
-        items-center
-        justify-center
-        rounded-md
-        text-muted-foreground
-        transition-colors
-        hover:bg-muted
-        hover:text-foreground
-      "
-    >
-      {children}
-    </button>
-  );
-}

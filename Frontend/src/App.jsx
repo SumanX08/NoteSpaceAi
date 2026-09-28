@@ -7,6 +7,7 @@ import Sidebar from "./components/sidebar/Sidebar";
 import { TopBar } from "./components/top-bar";
 import { NavTabs } from "./components/nav-tabs";
 import { RightPanel } from "./components/right-panel";
+import EmptyNotebook from "./components/chat/EmptyNotebook";
 
 import { ChatView } from "./components/chat/ChatView";
 import { SourceView } from "./components/sources/SourceView";
@@ -141,41 +142,11 @@ const handleSourcesChange = (updatedSources) => {
   // ====================================================
 
   const renderView = () => {
-     if (!activeNotebook) {
+   if (!activeNotebook) {
     return (
-      <div className="flex h-full items-center justify-center px-6">
-        <div className="max-w-md text-center">
-
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            No notebooks yet
-          </h2>
-
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Create your first workspace to start adding
-            sources and chatting with your knowledge.
-          </p>
-
-          <button
-            onClick={createNotebook}
-            className="
-              mt-6
-              rounded-lg
-              bg-primary
-              px-5
-              py-2.5
-              text-sm
-              font-medium
-              text-primary-foreground
-              shadow-soft
-              transition-colors
-              hover:bg-primary-hover
-            "
-          >
-            Create your first notebook
-          </button>
-
-        </div>
-      </div>
+      <EmptyNotebook
+        onCreateNotebook={createNotebook}
+      />
     );
   }
     switch (activeTab) {
@@ -239,29 +210,51 @@ const handleSourcesChange = (updatedSources) => {
   // ====================================================
 
   return (
-    <div className="flex h-screen bg-background">
+  <div className="flex h-screen bg-background">
 
-      <Sidebar
-        notebooks={notebooks}
-        onCreateNotebook={createNotebook}
-        onRenameNotebook={renameNotebook}
-        onDeleteNotebook={deleteNotebook}
-        onTogglePin={togglePin}
-      />
+    {/* ==========================================
+        SIDEBAR
+    ========================================== */}
 
-     <main className="flex min-w-0 flex-1 flex-col">
+    <Sidebar
+      notebooks={notebooks}
+      onCreateNotebook={createNotebook}
+      onRenameNotebook={renameNotebook}
+      onDeleteNotebook={deleteNotebook}
+      onTogglePin={togglePin}
+    />
 
-  {activeNotebook ? (
-    <>
+
+    {/* ==========================================
+        MAIN APP
+    ========================================== */}
+
+    <main className="flex min-w-0 flex-1 flex-col">
+
+      {/* TOP BAR */}
+
       <TopBar
-        title={activeNotebook.title}
-        emoji={activeNotebook.emoji}
-        onAddSource={() =>
-          setActiveTab("sources")
+        title={
+          activeNotebook?.title ??
+          "No workspace"
         }
+        emoji={
+          activeNotebook?.emoji ??
+          "📓"
+        }
+        onAddSource={() => {
+          if (activeNotebook) {
+            setActiveTab("sources");
+          }
+        }}
       />
+
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
+
+        {/* ======================================
+            CENTER
+        ====================================== */}
 
         <div className="flex min-w-0 flex-1 flex-col">
 
@@ -273,26 +266,25 @@ const handleSourcesChange = (updatedSources) => {
 
         </div>
 
+
+        {/* ======================================
+            RIGHT PANEL
+        ====================================== */}
+
         {rightPanelOpen && (
           <RightPanel
             sources={
-              activeNotebook.sources ?? []
+              activeNotebook?.sources ?? []
             }
           />
         )}
 
       </div>
-    </>
-  ) : (
-    <div className="flex min-h-0 flex-1">
-      {renderView()}
-    </div>
-  )}
 
-</main>
+    </main>
 
-    </div>
-  );
+  </div>
+);
 }
 
 

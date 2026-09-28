@@ -23,31 +23,7 @@ export default function SidebarHeader({
       </div>
 
       {/* Search */}
-      <div className="px-3 pb-2 pt-3">
-        <button
-          className="
-            flex
-            h-9
-            w-full
-            items-center
-            gap-2
-            rounded-lg
-            border
-            border-border
-            bg-muted/40
-            px-3
-            text-sm
-            text-muted-foreground
-            transition-colors
-            hover:bg-muted
-            hover:text-foreground
-          "
-        >
-          <Search className="h-4 w-4" />
-
-          <span>Search...</span>
-        </button>
-      </div>
+     
 
       {/* New Workspace */}
       <div className="px-3 pb-3">

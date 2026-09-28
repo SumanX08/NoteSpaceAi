@@ -47,9 +47,6 @@ export default function SidebarFooter() {
             {fullName}
           </span>
 
-          <span className="truncate text-xs text-muted-foreground">
-            {email}
-          </span>
         </div>
 
         {/* Logout */}

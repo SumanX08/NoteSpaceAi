@@ -27,7 +27,7 @@ export function TopBar({ title, emoji, onAddSource }) {
 
       <div className="mx-2 hidden h-5 w-px bg-border md:block" />
 
-      <button className="hidden h-8 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-[0.8125rem] text-muted-foreground transition-colors hover:border-border-strong hover:bg-muted md:flex">
+      <button className="hidden h-10 items-center gap-2 w-1/2 rounded-lg border border-border bg-muted/40 px-3 text-[0.8125rem] text-muted-foreground transition-colors hover:border-border-strong hover:bg-muted md:flex">
         <Search className="h-3.5 w-3.5" />
 
         <span>Search in notebook...</span>
@@ -38,13 +38,7 @@ export function TopBar({ title, emoji, onAddSource }) {
       </button>
 
       <div className="ml-auto flex items-center gap-1.5">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-        >
-          <Bell className="h-4 w-4" />
-        </Button>
+        
 
         <Button
           onClick={onAddSource}
@@ -74,11 +68,7 @@ export function TopBar({ title, emoji, onAddSource }) {
 
         <div className="mx-1 h-5 w-px bg-border" />
 
-        <Avatar className="h-8 w-8 ring-1 ring-border">
-          <AvatarFallback className="bg-linear-to-br from-zinc-600 to-zinc-800 text-[0.625rem] font-semibold text-white">
-            AK
-          </AvatarFallback>
-        </Avatar>
+       
       </div>
     </header>
   );
