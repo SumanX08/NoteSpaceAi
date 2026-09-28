@@ -323,3 +323,84 @@ export const getChatMessages =
 
     }
   );
+
+// =====================================
+// SEARCH MESSAGES IN NOTEBOOK
+// =====================================
+
+export const searchMessages =
+  asyncHandler(
+    async (req, res) => {
+      const {
+        notebookId,
+      } = req.params;
+
+      const {
+        q,
+      } = req.query;
+
+      const userId =
+        req.userId;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
+
+      if (!notebookId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Notebook ID is required.",
+        });
+      }
+
+      const query =
+        q?.trim();
+
+      if (!query) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+        });
+      }
+
+      // Find the chat belonging to this
+      // notebook + user
+      const chat =
+        await Chat.findOne({
+          notebook: notebookId,
+          userId,
+        });
+
+      if (!chat) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+        });
+      }
+
+      // Search messages inside this chat
+      const messages =
+        await Message.find({
+          chat: chat._id,
+
+          content: {
+            $regex: query,
+            $options: "i",
+          },
+        })
+          .sort({
+            createdAt: -1,
+          })
+          .limit(20)
+          .lean();
+
+      return res.status(200).json({
+        success: true,
+        data: messages,
+      });
+    }
+  );

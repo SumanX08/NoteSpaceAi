@@ -234,6 +234,9 @@ const handleSourcesChange = (updatedSources) => {
       {/* TOP BAR */}
 
       <TopBar
+
+          notebookId={activeNotebook.id}
+
         title={
           activeNotebook?.title ??
           "No workspace"

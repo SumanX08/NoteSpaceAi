@@ -6,3 +6,17 @@ export const askQuestion = async (notebookId, question) => {
     question,
   });
 };
+
+export const searchMessages = async (
+  notebookId,
+  query
+) => {
+  return await api.get(
+    `/chat/${notebookId}/search`,
+    {
+      params: {
+        q: query,
+      },
+    }
+  );
+};

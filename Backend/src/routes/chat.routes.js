@@ -3,16 +3,26 @@ import express from "express";
 import {
   askQuestion,
   getChatMessages,
+  searchMessages,
 } from "../controllers/chat.controller.js";
 
-import { requireAuth } from "../middleware/auth.middleware.js";
+import {
+  requireAuth,
+} from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Protect all routes below
 router.use(requireAuth);
 
-router.post("/", askQuestion);
+router.post(
+  "/",
+  askQuestion
+);
+
+router.get(
+  "/:notebookId/search",
+  searchMessages
+);
 
 router.get(
   "/:notebookId/messages",
