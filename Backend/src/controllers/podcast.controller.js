@@ -39,11 +39,7 @@ export async function generatePodcast(
     const userId =
       req.userId;
 
-    /*
-     * ---------------------------------------------
-     * Validation
-     * ---------------------------------------------
-     */
+  
 
     if (
       !VALID_STYLES.includes(style)
