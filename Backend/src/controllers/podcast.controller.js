@@ -76,11 +76,7 @@ export async function generatePodcast(
       });
     }
 
-    /*
-     * ---------------------------------------------
-     * Verify notebook ownership
-     * ---------------------------------------------
-     */
+  
 
     const notebook =
       await Notebook.findOne({
